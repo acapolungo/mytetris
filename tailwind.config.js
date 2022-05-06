@@ -20,7 +20,8 @@ module.exports = {
         'cyanbg': '#006484',
         'purplebg': '#6A0A56',
         'white': '#ffffff',
-        'redbg': '#792c2c',
+        'redbg': '#562425',
+        'bordergrid':'#562425',
       },
       gridTemplateRows: {
         '22': 'repeat(22, minmax(0, 1fr))',
@@ -31,6 +32,9 @@ module.exports = {
         'o-purple': "linear-gradient(140deg, rgba(211,109,171,1) 0%, rgba(174,36,143,1) 100%)",
         'l-blue': "linear-gradient(140deg, rgba(39,193,242,1) 0%, rgba(0,152,221,1) 100%)",
         'i-red': "linear-gradient(140deg, rgba(243,121,92,1) 0%, rgba(212,33,41,1) 100%)",
+      },
+      dropShadow: {
+        'md-black': '0.2rem 0.2rem 0.15rem rgba(0, 0, 0, 0.6)',        
       },
     }
   },
