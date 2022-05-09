@@ -280,11 +280,11 @@ function App() {
             <h3 className="w-[10.5rem] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Next</h3>
             <div className="w-[100%] h-[7rem] bg-greybg rounded-md flex flex-wrap justify-center items-center content-center">
               <div className="w-[100%] flex justify-center">
-                <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-t-orange"></div>
+                <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-gradient-orange"></div>
               </div>
-              <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-t-orange"></div>
-              <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-t-orange"></div>
-              <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-t-orange"></div>
+              <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-gradient-orange"></div>
+              <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-gradient-orange"></div>
+              <div className="w-[1.75rem] h-[1.75rem] border-redbg border-[0.05rem] rounded bg-gradient-orange"></div>
             </div>
           </section>
           <section className="w-[100%] mt-[1rem]">
