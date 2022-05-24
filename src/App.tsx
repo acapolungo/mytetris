@@ -20,31 +20,41 @@ function App() {
     const arrayCopy = [...tetrisGrid]
     // 2. Make a shallow copy of the element you want to mutate
     const currentRow = [...arrayCopy[count]];
+    // const isEmpty = Object.keys(currentRow[5].color).length === 0;
+    // console.log(isEmpty)
     // 3. Update the property you're interested in
     currentRow[5] = { color: 'orange', rounded: 'rounded-md' };
     // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
     arrayCopy[count] = currentRow;
     // 5. Set the state to our new copy
     updateTetrisGrid(arrayCopy)
-
     // 6. SetTimeout the state to remove colored box after 1s
-    setTimeout(function() {
-      currentRow[5] = { color: '' }
-      updateTetrisGrid(arrayCopy)
-    },1000)
+
+    if (arrayCopy[count+1]) {
+      const nextRow = arrayCopy[count+1];
+      // console.log(nextRow[5].color !== "")
+      if (nextRow[5].color !== "") {
+        console.log('la prochaine est colorée')
+        setCount(0)
+      } else {
+        setTimeout(function () {
+          currentRow[5] = { color: '' }
+          updateTetrisGrid(arrayCopy)
+        }, 500)
+      }
+    }
   }
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCount(count => count + 1);
       updateGrid()
-    }, 1000);
+    }, 500);
 
-    if (count >= 22) {
+    if (count > 21) {
       setCount(0)
     }
     return () => clearInterval(interval);
-
   }, [updateGrid]);
 
 
