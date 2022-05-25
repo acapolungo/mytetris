@@ -8,8 +8,8 @@ function emptyGrid() {
   return new Array(22).fill(rowsOfBoxes)
 }
 
-const checkIfRowBelowExist = (grid: any[], count: number) => {
-  const nextLineRow = grid[count + 1]
+const checkIfRowBelowExist = (grid: any[], rowIndex: number) => {
+  const nextLineRow = grid[rowIndex + 1]
   if (nextLineRow) {
     return true
   }
@@ -19,63 +19,65 @@ const checkIfRowBelowExist = (grid: any[], count: number) => {
 
 function App() {
   const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
-  const [count, setCount] = useState(0);
+  const [rowIndex, setrowIndex] = useState(0);
 
   const addShapeColor = useCallback(() => {
     const tetrisGridCopy = [...tetrisGrid]
-    const currentRow = [...tetrisGridCopy[count]];
+    const rowSelected = [...tetrisGridCopy[rowIndex]];
+    const activeBoxStyle = { color: 'orange', rounded: 'rounded-md' }
 
-    currentRow[5] = { color: 'orange', rounded: 'rounded-md' };
-    tetrisGridCopy[count] = currentRow;
+    rowSelected[5] = activeBoxStyle;
+    tetrisGridCopy[rowIndex] = rowSelected;
 
     setTetrisGrid(tetrisGridCopy)
 
-    // if (checkIfRowBelowExist(tetrisGridCopy, count)) {
-    //   const nextRow = tetrisGridCopy[count + 1];
+    // if (checkIfRowBelowExist(tetrisGridCopy, rowIndex)) {
+    //   const nextRowSelected = tetrisGridCopy[rowIndex + 1];
 
-    //   if (nextRow[5].color !== "") {
+    //   if (nextRowSelected[5].color !== "") {
     //     console.log('la prochaine est colorée')
-    //     setCount(0)
+    //     setrowIndex(0)
     //   } else {
     //     setTimeout(function () {
-    //       currentRow[5] = { color: '' }
+    //       rowSelected[5] = { color: '' }
     //       setTetrisGrid(tetrisGridCopy)
     //     }, 500)
     //   }
     // }
-  }, [tetrisGrid, count])
+  }, [tetrisGrid, rowIndex])
 
-  const removeShapeColor = useCallback((interval: NodeJS.Timeout) => {
+  const removeShapeColor = useCallback(() => {
     const tetrisGridCopy = [...tetrisGrid]
-    const currentRow = [...tetrisGridCopy[count]];
-    if (checkIfRowBelowExist(tetrisGridCopy, count)) {
-      const nextRow = tetrisGridCopy[count+1];
+    const rowSelected = [...tetrisGridCopy[rowIndex]];
+    if (checkIfRowBelowExist(tetrisGridCopy, rowIndex)) {
+      const nextRowSelected = tetrisGridCopy[rowIndex+1];
 
-      if (nextRow[5].color !== "") {
+      if (nextRowSelected[5].color !== "") {
         console.log('la prochaine est colorée')
-        setCount(0)
+        setrowIndex(0)
       } else {
         setTimeout(function () {
-          currentRow[5] = { color: '' }
+          const inactiveBoxStyle = { color: '' }
+          rowSelected[5] = inactiveBoxStyle
           setTetrisGrid(tetrisGridCopy)
         }, 480)
       }
     }
-  }, [tetrisGrid, count])
+  }, [tetrisGrid, rowIndex])
   
   useEffect(() => {
     const interval = setInterval(() => {
-      if (count <= 21) {
-        setCount(count => count + 1);
+      if (rowIndex <= 21) {
+        setrowIndex(rowIndex => rowIndex + 1);
         addShapeColor()
-        removeShapeColor(interval)
+        removeShapeColor()
       } else {
-        setCount(0)
+        setrowIndex(0)
       }
     }, 500);
 
     return () => clearInterval(interval);
-  }, [addShapeColor, removeShapeColor, count]);
+  }, [addShapeColor, removeShapeColor, rowIndex]);
 
 
   return (
@@ -122,4 +124,4 @@ export default App;
     // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
     // 5. Set the state to our new copy
     // 6. SetTimeout the state to remove colored box after 1s
-    // 7. the next line is colored then we start again at count 0 otherwise we setTimeout and remove the style
+    // 7. the next line is colored then we start again at rowIndex 0 otherwise we setTimeout and remove the style
