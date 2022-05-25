@@ -1,61 +1,81 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 import './App.css';
 import Cell from './components/Emptycell/Cell';
-
 
 function emptyGrid() {
   const rowsOfBoxes = new Array(11).fill({ color: "" });
   return new Array(22).fill(rowsOfBoxes)
 }
 
+const checkIfRowBelowExist = (grid: any[], count: number) => {
+  const nextLineRow = grid[count + 1]
+  if (nextLineRow) {
+    return true
+  }
+  return false
+}
 
 
 function App() {
-  const [tetrisGrid, updateTetrisGrid] = useState(emptyGrid());
+  const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
   const [count, setCount] = useState(0);
 
-  const updateGrid = () => {
-    // 1. Make a shallow copy of the array
-    const arrayCopy = [...tetrisGrid]
-    // 2. Make a shallow copy of the element you want to mutate
-    const currentRow = [...arrayCopy[count]];
-    // const isEmpty = Object.keys(currentRow[5].color).length === 0;
-    // console.log(isEmpty)
-    // 3. Update the property you're interested in
-    currentRow[5] = { color: 'orange', rounded: 'rounded-md' };
-    // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
-    arrayCopy[count] = currentRow;
-    // 5. Set the state to our new copy
-    updateTetrisGrid(arrayCopy)
-    // 6. SetTimeout the state to remove colored box after 1s
+  const addShapeColor = useCallback(() => {
+    const tetrisGridCopy = [...tetrisGrid]
+    const currentRow = [...tetrisGridCopy[count]];
 
-    if (arrayCopy[count+1]) {
-      const nextRow = arrayCopy[count+1];
-      // console.log(nextRow[5].color !== "")
+    currentRow[5] = { color: 'orange', rounded: 'rounded-md' };
+    tetrisGridCopy[count] = currentRow;
+
+    setTetrisGrid(tetrisGridCopy)
+
+    // if (checkIfRowBelowExist(tetrisGridCopy, count)) {
+    //   const nextRow = tetrisGridCopy[count + 1];
+
+    //   if (nextRow[5].color !== "") {
+    //     console.log('la prochaine est colorée')
+    //     setCount(0)
+    //   } else {
+    //     setTimeout(function () {
+    //       currentRow[5] = { color: '' }
+    //       setTetrisGrid(tetrisGridCopy)
+    //     }, 500)
+    //   }
+    // }
+  }, [tetrisGrid, count])
+
+  const removeShapeColor = useCallback((interval: NodeJS.Timeout) => {
+    const tetrisGridCopy = [...tetrisGrid]
+    const currentRow = [...tetrisGridCopy[count]];
+    if (checkIfRowBelowExist(tetrisGridCopy, count)) {
+      const nextRow = tetrisGridCopy[count+1];
+
       if (nextRow[5].color !== "") {
         console.log('la prochaine est colorée')
         setCount(0)
       } else {
         setTimeout(function () {
           currentRow[5] = { color: '' }
-          updateTetrisGrid(arrayCopy)
-        }, 500)
+          setTetrisGrid(tetrisGridCopy)
+        }, 480)
       }
     }
-  }
-
+  }, [tetrisGrid, count])
+  
   useEffect(() => {
     const interval = setInterval(() => {
-      setCount(count => count + 1);
-      updateGrid()
+      if (count <= 21) {
+        setCount(count => count + 1);
+        addShapeColor()
+        removeShapeColor(interval)
+      } else {
+        setCount(0)
+      }
     }, 500);
 
-    if (count > 21) {
-      setCount(0)
-    }
     return () => clearInterval(interval);
-  }, [updateGrid]);
+  }, [addShapeColor, removeShapeColor, count]);
 
 
   return (
@@ -65,9 +85,7 @@ function App() {
       <div className="w-[35rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
 
         <section className="w-[19.25rem] h-[100%] bg-greybg grid grid-cols-11 grid-rows-22 text-white">
-          {/* {tetrisGrid.flat().map((box, index) => <div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid ${box.color}`}></div>)} */}
           {tetrisGrid.flat().map((box, index) => <Cell key={index} color={box.color} roundedshape={box.rounded} />)}
-          {/* <div className="w-[1.75rem] h-[1.75rem] border-bordergrid border-[0.05rem] rounded bg-s-yellow"></div> */}
         </section>
 
         <section className="w-[10.5rem] h-[100%] rounded-sm flexflex-wrap">
@@ -98,24 +116,10 @@ export default App;
 
 
 
-// const arrayOfGradients = ['bg-gradient-yellow', 'bg-gradient-orange','bg-gradient-purple','bg-gradient-blue','bg-gradient-red',]
-// const row = document.querySelector(`#row${counter}`);
-// row?.classList.add(gradients[Math.floor(Math.random() * gradients.length)])
-// const interval = setInterval(() => {
-//   setCounter(counter => counter + 1)
-
-//   if (counter <= 22) {
-//     console.log(row)
-//     console.log(counter)
-//     row?.classList.add('bg-gradient-orange')
-//   } else {
-//     setCounter(1)
-//     // setColor(arrayOfGradients[Math.floor(Math.random() * arrayOfGradients.length)])
-//   }
-// }, 1000);
-
-// setTimeout(function () {
-//   row?.classList.remove('bg-gradient-orange');
-// }, 2000);
-
-// return () => clearInterval(interval);
+    // 1. Make a shallow copy of the array
+    // 2. Make a shallow copy of the element you want to mutate
+    // 3. Update the property you're interested in
+    // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
+    // 5. Set the state to our new copy
+    // 6. SetTimeout the state to remove colored box after 1s
+    // 7. the next line is colored then we start again at count 0 otherwise we setTimeout and remove the style
