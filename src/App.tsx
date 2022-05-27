@@ -11,7 +11,6 @@ function emptyGrid() {
 const checkIfRowBelowExist = (grid: any[], rowIndex: number) => grid[rowIndex + 1] ? true : false;
 const checkIfRowBelowIsTaken = (grid: any[], rowIndex: number) => grid[rowIndex + 1][5].color === '' ? true : false;
 
-
 function App() {
   const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
   const [currentRowIndex, setCurrentRowIndex] = useState(0);
