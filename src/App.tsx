@@ -5,32 +5,34 @@ import Cell from './components/Emptycell/Cell';
 
 function emptyGrid() {
   const rowsOfBoxes = new Array(11).fill({ color: '' });
-  return new Array(22).fill(rowsOfBoxes);
+  return new Array(22).fill(rowsOfBoxes)
 }
 
-const checkIfRowBelowExist = (grid: any[], rowIndex: number) => {
-  const nextLineRow = grid[rowIndex + 1]
-  if (nextLineRow) {
-    return true;
-  }
-  return false;
-}
+const checkIfRowBelowExist = (grid: any[], rowIndex: number) => grid[rowIndex + 1] ? true : false;
+
+const changeColor = () => {
+  const arrayOfColors = ["yellow", "orange", "purple", "blue", "red"];
+  const random = arrayOfColors[Math.floor(Math.random() * arrayOfColors.length)]
+  return random;
+};
+
 
 function App() {
   const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
   const [rowIndex, setrowIndex] = useState(0);
+  const [colors, setColors] = useState('')
 
   const addShapeColor = useCallback(() => {
     const tetrisGridCopy = [...tetrisGrid]
     const rowSelected = [...tetrisGridCopy[rowIndex]];
-    const activeBoxStyle = { color: 'orange', rounded: 'rounded-md' }
+    const activeBoxStyle = { color: colors, rounded: 'rounded-md' }
 
     rowSelected[5] = activeBoxStyle;
     tetrisGridCopy[rowIndex] = rowSelected;
 
     setTetrisGrid(tetrisGridCopy)
 
-  }, [tetrisGrid, rowIndex])
+  }, [tetrisGrid, rowIndex, colors])
 
   const removeShapeColor = useCallback(() => {
     const tetrisGridCopy = [...tetrisGrid]
@@ -39,6 +41,7 @@ function App() {
       const nextRowSelected = tetrisGridCopy[rowIndex + 1];
 
       if (nextRowSelected[5].color !== '') {
+        setColors(changeColor);
         setrowIndex(0)
       } else {
         setTimeout(function () {
@@ -63,6 +66,10 @@ function App() {
 
     return () => clearInterval(interval);
   }, [addShapeColor, removeShapeColor, rowIndex]);
+
+  useEffect(() => {
+    setColors(changeColor)
+  }, [setColors]);
 
   return (
 
