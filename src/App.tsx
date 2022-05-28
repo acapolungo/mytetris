@@ -9,23 +9,28 @@ function emptyGrid() {
 }
 
 const checkIfRowBelowExist = (grid: any[], rowIndex: number) => grid[rowIndex + 1] ? true : false;
-
 const checkIfRowBelowisTaken = (grid: any[], rowIndex: number) => grid[rowIndex + 1][5].color === '' ? true : false;
+
 
 function App() {
   const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
   const [rowIndex, setRowIndex] = useState(0);
 
+  const introduceShape = useCallback(() => {
+    const tetrisGridCopy = [...tetrisGrid]
+    const firstRow = [...tetrisGridCopy[0]];
+
+    firstRow[5]= { color: 'orange', rounded: 'rounded-md' }
+    tetrisGridCopy[0] = firstRow;
+    setTetrisGrid(tetrisGridCopy)
+  }, [tetrisGrid])
+
   const addShapeColor = useCallback(() => {
 
     const tetrisGridCopy = [...tetrisGrid]
     const currentRow = [...tetrisGridCopy[rowIndex]];
-
     const activeCellStyle = { color: 'orange', rounded: 'rounded-md' }
     const inactiveCellStyle = { color: '', rounded: '' };
-
-    // console.log(tetrisGridCopy[rowIndex])
-    // console.log(tetrisGridCopy[rowIndex+1])
 
     if (checkIfRowBelowExist(tetrisGridCopy, rowIndex) && checkIfRowBelowisTaken(tetrisGridCopy, rowIndex)) {
       const nextRow = [...tetrisGridCopy[rowIndex + 1]];
@@ -38,17 +43,10 @@ function App() {
       setTetrisGrid(tetrisGridCopy)
     } else {
       setRowIndex(0)
+      introduceShape()
     }
 
-  }, [tetrisGrid, rowIndex])
-
-  const introduceShape = () => {
-    const tetrisGridCopy = [...tetrisGrid]
-    const firstRow = [...tetrisGridCopy[0]];
-    firstRow[5]= { color: 'orange', rounded: 'rounded-md' }
-    tetrisGridCopy[0] = firstRow;
-    setTetrisGrid(tetrisGridCopy)
-  }
+  }, [tetrisGrid, rowIndex, introduceShape])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -56,13 +54,14 @@ function App() {
     }, 500);
 
     return () => clearInterval(interval);
+
+    
   }, [addShapeColor]);
 
   useEffect(() => {
-    if (rowIndex === 0) {
-      introduceShape();
-    }
-  }, [rowIndex])
+    introduceShape();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
 
