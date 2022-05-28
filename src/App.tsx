@@ -9,12 +9,12 @@ function emptyGrid() {
 }
 
 const checkIfRowBelowExist = (grid: any[], rowIndex: number) => grid[rowIndex + 1] ? true : false;
-const checkIfRowBelowisTaken = (grid: any[], rowIndex: number) => grid[rowIndex + 1][5].color === '' ? true : false;
+const checkIfRowBelowIsTaken = (grid: any[], rowIndex: number) => grid[rowIndex + 1][5].color === '' ? true : false;
 
 
 function App() {
   const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
-  const [rowIndex, setRowIndex] = useState(0);
+  const [currentRowIndex, setCurrentRowIndex] = useState(0);
 
   const introduceShape = useCallback(() => {
     const tetrisGridCopy = [...tetrisGrid]
@@ -25,43 +25,38 @@ function App() {
     setTetrisGrid(tetrisGridCopy)
   }, [tetrisGrid])
 
-  const addShapeColor = useCallback(() => {
-
+  const moveShape = useCallback(() => {
     const tetrisGridCopy = [...tetrisGrid]
-    const currentRow = [...tetrisGridCopy[rowIndex]];
+    const currentRow = [...tetrisGridCopy[currentRowIndex]];
     const activeCellStyle = { color: 'orange', rounded: 'rounded-md' }
     const inactiveCellStyle = { color: '', rounded: '' };
 
-    if (checkIfRowBelowExist(tetrisGridCopy, rowIndex) && checkIfRowBelowisTaken(tetrisGridCopy, rowIndex)) {
-      const nextRow = [...tetrisGridCopy[rowIndex + 1]];
+    if (checkIfRowBelowExist(tetrisGridCopy, currentRowIndex) && checkIfRowBelowIsTaken(tetrisGridCopy, currentRowIndex)) {
+      const nextRow = [...tetrisGridCopy[currentRowIndex + 1]];
       currentRow[5] = inactiveCellStyle;
       nextRow[5] = activeCellStyle;
-      tetrisGridCopy[rowIndex] = currentRow;
-      tetrisGridCopy[rowIndex + 1] = nextRow;
+      tetrisGridCopy[currentRowIndex] = currentRow;
+      tetrisGridCopy[currentRowIndex + 1] = nextRow;
 
-      setRowIndex(rowIndex => rowIndex + 1);
+      setCurrentRowIndex(rowIndex => rowIndex + 1);
       setTetrisGrid(tetrisGridCopy)
     } else {
-      setRowIndex(0)
+      setCurrentRowIndex(0)
       introduceShape()
     }
-
-  }, [tetrisGrid, rowIndex, introduceShape])
+  }, [tetrisGrid, currentRowIndex, introduceShape])
 
   useEffect(() => {
     const interval = setInterval(() => {
-      addShapeColor();
+      moveShape();
     }, 500);
-
     return () => clearInterval(interval);
-
-    
-  }, [addShapeColor]);
+  }, [moveShape]);
 
   useEffect(() => {
     introduceShape();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   return (
 
