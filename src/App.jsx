@@ -22,86 +22,63 @@ const initialState = {
 
 const reducer = (state = initialState, action) => {
 
-  const {newColor, newGrid, rowIndex} = action.payload;
-
   switch (action.type) {
-    case 'FIRSTSHAPECOLOR':
+    case 'FIRSTSHAPEMANAGEMENT':
+      const randomizedColor = randomColor()
+      const tetrisGridCopy = [...state.tetrisGrid];
+      const firstRow = [...tetrisGridCopy[0]];
+  
+      firstRow[5] = { color: randomizedColor, rounded: 'rounded-md' };
+      tetrisGridCopy[0] = firstRow;
+
       return {
         ...state,
-        currentShapeColor: newColor,
-        tetrisGrid: newGrid,
+        currentShapeColor: randomizedColor,
+        tetrisGrid: tetrisGridCopy,
         currentRowIndex: 0,
       }
-    case 'NEXTMOVESHAPE':
+    case 'MOVESHAPESMANAGEMENT':
+      const secondTetrisGridCopy = [...state?.tetrisGrid]
+      const currentRowCopy = [...secondTetrisGridCopy[state?.currentRowIndex]];
+      const nextRowCopy = [...secondTetrisGridCopy[state?.currentRowIndex + 1]];
+      const inactiveCellStyle = { color: '', rounded: '' };
+      const activeCellStyle = { color: state?.currentShapeColor, rounded: 'rounded-md' };
+      
+      currentRowCopy[5] = inactiveCellStyle;
+      nextRowCopy[5] = activeCellStyle;
+      secondTetrisGridCopy[state?.currentRowIndex] = currentRowCopy;
+      secondTetrisGridCopy[state?.currentRowIndex + 1] = nextRowCopy;
       return {
         ...state,
-        tetrisGrid: newGrid,
-        currentRowIndex: state.currentRowIndex + rowIndex,
+        tetrisGrid: secondTetrisGridCopy,
+        currentRowIndex: state.currentRowIndex + 1,
       }
       default:
-        throw new Error();
+        throw new Error(`Unknown action type: ${action.type}`);
   }
 }
 
 const checkIfRowBelowExist = (grid, rowIndex) => grid[rowIndex + 1];
-const checkIfRowBelowIsTaken = (grid, rowIndex) => grid[rowIndex + 1][5].color === '' ? true : false;
+const checkIfRowBelowIsTaken = (grid, rowIndex) => grid[rowIndex + 1][5].color === '';
 
 function App() {
 
   const [state, dispatch] = useReducer(reducer, initialState);
-
   const introduceShape = useCallback(() => {
-    const randomizedColor = randomColor()
-    const tetrisGridCopy = [...state?.tetrisGrid];
-    const firstRow = [...tetrisGridCopy[0]];
-
-    firstRow[5] = { color: randomizedColor, rounded: 'rounded-md' };
-    tetrisGridCopy[0] = firstRow;
-
     dispatch({
-      type: 'FIRSTSHAPECOLOR',
-      payload: {
-        newColor: randomizedColor,
-        newGrid: tetrisGridCopy
-    }})
-
-    // setState({
-    //   ...state,
-    //   currentShapeColor: newColor,
-    //   tetrisGrid: tetrisGridCopy,
-    //   currentRowIndex: 0
-    // })
-    // setCurrentRowIndex(0);
-    // setCurrentShapeColor(randomColor())
-    // setTetrisGrid(tetrisGridCopy);
-  }, [state?.tetrisGrid])
+      type: 'FIRSTSHAPEMANAGEMENT'
+    })
+  }, [])
 
   const moveShape = useCallback(() => {
-    const tetrisGridCopy = [...state?.tetrisGrid]
-    const currentRowCopy = [...tetrisGridCopy[state?.currentRowIndex]];
-    const inactiveCellStyle = { color: '', rounded: '' };
-    const activeCellStyle = { color: state?.currentShapeColor, rounded: 'rounded-md' };
-
-    if (checkIfRowBelowExist(tetrisGridCopy, state?.currentRowIndex) && checkIfRowBelowIsTaken(tetrisGridCopy, state?.currentRowIndex)) {
-      const nextRowCopy = [...tetrisGridCopy[state?.currentRowIndex + 1]];
-
-      currentRowCopy[5] = inactiveCellStyle;
-      nextRowCopy[5] = activeCellStyle;
-      tetrisGridCopy[state?.currentRowIndex] = currentRowCopy;
-      tetrisGridCopy[state?.currentRowIndex + 1] = nextRowCopy;
-
+    if (checkIfRowBelowExist(state?.tetrisGrid, state?.currentRowIndex) && checkIfRowBelowIsTaken(state?.tetrisGrid, state?.currentRowIndex)) {
       dispatch({
-        type: 'NEXTMOVESHAPE',
-        payload: {
-          newGrid: tetrisGridCopy,
-          rowIndex: 1
-      } })
-      // setCurrentRowIndex(rowIndex => rowIndex + 1);
-      // setTetrisGrid(tetrisGridCopy);
+        type: 'MOVESHAPESMANAGEMENT'
+      })
     } else {
       introduceShape();
     }
-  }, [introduceShape, state?.currentRowIndex, state?.currentShapeColor, state?.tetrisGrid])
+  }, [introduceShape, state?.currentRowIndex, state?.tetrisGrid])
 
   useEffect(() => {
     const interval = setInterval(() => {
