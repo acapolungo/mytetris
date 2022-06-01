@@ -1,279 +1,72 @@
-import React from 'react';
+import { useEffect, useState, useCallback } from 'react';
+
 import './App.css';
+import Cell from './components/Emptycell/Cell';
+
+function emptyGrid() {
+  const rowsOfCells = new Array(11).fill({ color: '', rounded: '' });
+  return new Array(22).fill(rowsOfCells);
+}
+
+const checkIfRowBelowExist = (grid: any[], rowIndex: number) => grid[rowIndex + 1] ? true : false;
+const checkIfRowBelowIsTaken = (grid: any[], rowIndex: number) => grid[rowIndex + 1][5].color === '' ? true : false;
+
 
 function App() {
+  const [tetrisGrid, setTetrisGrid] = useState(emptyGrid());
+  const [currentRowIndex, setCurrentRowIndex] = useState(0);
+
+  const introduceShape = useCallback(() => {
+    const tetrisGridCopy = [...tetrisGrid]
+    const firstRow = [...tetrisGridCopy[0]];
+
+    firstRow[5]= { color: 'orange', rounded: 'rounded-md' }
+    tetrisGridCopy[0] = firstRow;
+    setTetrisGrid(tetrisGridCopy)
+  }, [tetrisGrid])
+
+  const moveShape = useCallback(() => {
+    const tetrisGridCopy = [...tetrisGrid]
+    const currentRow = [...tetrisGridCopy[currentRowIndex]];
+    const activeCellStyle = { color: 'orange', rounded: 'rounded-md' }
+    const inactiveCellStyle = { color: '', rounded: '' };
+
+    if (checkIfRowBelowExist(tetrisGridCopy, currentRowIndex) && checkIfRowBelowIsTaken(tetrisGridCopy, currentRowIndex)) {
+      const nextRow = [...tetrisGridCopy[currentRowIndex + 1]];
+      currentRow[5] = inactiveCellStyle;
+      nextRow[5] = activeCellStyle;
+      tetrisGridCopy[currentRowIndex] = currentRow;
+      tetrisGridCopy[currentRowIndex + 1] = nextRow;
+
+      setCurrentRowIndex(rowIndex => rowIndex + 1);
+      setTetrisGrid(tetrisGridCopy)
+    } else {
+      setCurrentRowIndex(0)
+      introduceShape()
+    }
+  }, [tetrisGrid, currentRowIndex, introduceShape])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      moveShape();
+    }, 500);
+    return () => clearInterval(interval);
+  }, [moveShape]);
+
+  useEffect(() => {
+    introduceShape();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
 
     <div className="mx-auto h-screen flex justify-center items-center bg-gradient-to-br from-purplebg to-cyanbg">
 
       <div className="w-[35rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
         <section className="w-[19.25rem] h-[100%] bg-greybg grid grid-cols-11 grid-rows-22 text-white">
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          <div className="w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid"></div>
-          {/* <div className="w-[1.75rem] h-[1.75rem] border-bordergrid border-[0.05rem] rounded bg-s-yellow"></div> */}
-
+          {tetrisGrid.flat().map((box, index) => <Cell key={index} color={box.color} roundedshape={box.rounded} />)}
         </section>
+
         <section className="w-[10.5rem] h-[100%] rounded-sm flexflex-wrap">
           <h1 className="text-[2.5rem] h-[12%] text-cyan">my<span className="font-bold">Tetris</span></h1>
           <section className="w-[100%]">
