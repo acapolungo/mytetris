@@ -21,13 +21,14 @@ const initialState = {
 }
 
 const reducer = (state = initialState, action) => {
+  const { tetrisGrid, currentRowIndex, currentShapeColor } = state;
 
   switch (action.type) {
-    case 'FIRSTSHAPEMANAGEMENT':
+    case 'INTRODUCE_RANDOM_COLOR_SHAPE':
       const randomizedColor = randomColor()
-      const tetrisGridCopy = [...state.tetrisGrid];
+      const tetrisGridCopy = [...tetrisGrid];
       const firstRow = [...tetrisGridCopy[0]];
-  
+
       firstRow[5] = { color: randomizedColor, rounded: 'rounded-md' };
       tetrisGridCopy[0] = firstRow;
 
@@ -37,24 +38,24 @@ const reducer = (state = initialState, action) => {
         tetrisGrid: tetrisGridCopy,
         currentRowIndex: 0,
       }
-    case 'MOVESHAPESMANAGEMENT':
-      const secondTetrisGridCopy = [...state?.tetrisGrid]
-      const currentRowCopy = [...secondTetrisGridCopy[state?.currentRowIndex]];
-      const nextRowCopy = [...secondTetrisGridCopy[state?.currentRowIndex + 1]];
+    case 'MOVE_COLOR_SHAPE':
+      const secondTetrisGridCopy = [...tetrisGrid]
+      const currentRowCopy = [...secondTetrisGridCopy[currentRowIndex]];
+      const nextRowCopy = [...secondTetrisGridCopy[currentRowIndex + 1]];
       const inactiveCellStyle = { color: '', rounded: '' };
-      const activeCellStyle = { color: state?.currentShapeColor, rounded: 'rounded-md' };
-      
+      const activeCellStyle = { color: currentShapeColor, rounded: 'rounded-md' };
+
       currentRowCopy[5] = inactiveCellStyle;
       nextRowCopy[5] = activeCellStyle;
-      secondTetrisGridCopy[state?.currentRowIndex] = currentRowCopy;
-      secondTetrisGridCopy[state?.currentRowIndex + 1] = nextRowCopy;
+      secondTetrisGridCopy[currentRowIndex] = currentRowCopy;
+      secondTetrisGridCopy[currentRowIndex + 1] = nextRowCopy;
       return {
         ...state,
         tetrisGrid: secondTetrisGridCopy,
-        currentRowIndex: state.currentRowIndex + 1,
+        currentRowIndex: currentRowIndex + 1,
       }
-      default:
-        throw new Error(`Unknown action type: ${action.type}`);
+    default:
+      throw new Error(`Unknown action type: ${action.type}`);
   }
 }
 
@@ -66,19 +67,20 @@ function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const introduceShape = useCallback(() => {
     dispatch({
-      type: 'FIRSTSHAPEMANAGEMENT'
+      type: 'INTRODUCE_RANDOM_COLOR_SHAPE'
     })
   }, [])
 
   const moveShape = useCallback(() => {
-    if (checkIfRowBelowExist(state?.tetrisGrid, state?.currentRowIndex) && checkIfRowBelowIsTaken(state?.tetrisGrid, state?.currentRowIndex)) {
+    const { tetrisGrid, currentRowIndex } = state;
+    if (checkIfRowBelowExist(tetrisGrid, currentRowIndex) && checkIfRowBelowIsTaken(tetrisGrid, currentRowIndex)) {
       dispatch({
-        type: 'MOVESHAPESMANAGEMENT'
+        type: 'MOVE_COLOR_SHAPE'
       })
     } else {
       introduceShape();
     }
-  }, [introduceShape, state?.currentRowIndex, state?.tetrisGrid])
+  }, [introduceShape, state])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,7 +95,7 @@ function App() {
   }, []);
 
   return (
-    
+
     <div className="mx-auto h-screen flex justify-center items-center bg-gradient-to-br from-purplebg to-cyanbg">
 
       <div className="w-[35rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
