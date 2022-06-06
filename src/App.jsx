@@ -23,11 +23,12 @@ const initialState = {
   tetrisGrid: emptyGrid(),
   currentRowIndex: 0,
   currentShapeColor: randomColor(),
-  nextShape: emptyNextShapeGrid()
+  nextShapeGrid: emptyNextShapeGrid(),
+  nextShapeColor: randomColor(),
 }
 
 const reducer = (state = initialState, action) => {
-  const { tetrisGrid, currentRowIndex, currentShapeColor } = state;
+  const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeGrid, nextShapeColor } = state;
 
   switch (action.type) {
     case 'INTRODUCE_RANDOM_COLOR_SHAPE':
@@ -60,6 +61,17 @@ const reducer = (state = initialState, action) => {
         tetrisGrid: secondTetrisGridCopy,
         currentRowIndex: currentRowIndex + 1,
       }
+      case 'NEXT_COLOR_SHAPE':
+        const nextShapeGridCopy = [...nextShapeGrid]
+        const nextShapeRowCopy = [...nextShapeGridCopy[2]];
+        const nextShapeStyle = { color: nextShapeColor, rounded: 'rounded-md' };
+
+        nextShapeRowCopy[3] = nextShapeStyle;
+        nextShapeGridCopy[2] = nextShapeRowCopy
+        return {
+          ...state,
+          nextShapeGrid: nextShapeGridCopy
+        }
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
@@ -77,6 +89,12 @@ function App() {
     })
   }, [])
 
+  const displayNextShape = useCallback(() => {
+    dispatch({
+      type: 'NEXT_COLOR_SHAPE'
+    })
+  }, [])
+
   const moveShape = useCallback(() => {
     const { tetrisGrid, currentRowIndex } = state;
     if (checkIfRowBelowExist(tetrisGrid, currentRowIndex) && checkIfRowBelowIsTaken(tetrisGrid, currentRowIndex)) {
@@ -85,8 +103,9 @@ function App() {
       })
     } else {
       introduceShape();
+      displayNextShape();
     }
-  }, [introduceShape, state])
+  }, [introduceShape, state, displayNextShape])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -97,8 +116,9 @@ function App() {
 
   useEffect(() => {
     introduceShape();
+    displayNextShape();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [displayNextShape]);
 
   return (
 
@@ -115,7 +135,7 @@ function App() {
             <h3 className="w-[100%] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Next</h3>
             <div className="w-[10.5rem] h-[8.75rem] bg-greybg rounded-md flex flex-wrap justify-center items-center content-center">
               <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-4">
-              {state.nextShape.flat().map((box, index) => <Cell key={index} color={box.color} roundedshape={box.rounded} />)}
+              {state.nextShapeGrid.flat().map((box, index) => <Cell key={index} color={box.color} roundedshape={box.rounded} />)}
               </section>
             </div>
           </section>
