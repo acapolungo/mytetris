@@ -32,16 +32,15 @@ const reducer = (state = initialState, action) => {
 
   switch (action.type) {
     case 'INTRODUCE_RANDOM_COLOR_SHAPE':
-      const randomizedColor = randomColor()
       const tetrisGridCopy = [...tetrisGrid];
       const firstRow = [...tetrisGridCopy[0]];
 
-      firstRow[5] = { color: randomizedColor, rounded: 'rounded-md' };
+      firstRow[5] = { color: nextShapeColor, rounded: 'rounded-md' };
       tetrisGridCopy[0] = firstRow;
 
       return {
         ...state,
-        currentShapeColor: randomizedColor,
+        currentShapeColor: nextShapeColor,
         tetrisGrid: tetrisGridCopy,
         currentRowIndex: 0,
       }
@@ -61,16 +60,18 @@ const reducer = (state = initialState, action) => {
         tetrisGrid: secondTetrisGridCopy,
         currentRowIndex: currentRowIndex + 1,
       }
-      case 'NEXT_COLOR_SHAPE':
+      case 'GENERATE_NEXT_SHAPE':
+        const randomizedNextColor = randomColor()
         const nextShapeGridCopy = [...nextShapeGrid]
         const nextShapeRowCopy = [...nextShapeGridCopy[2]];
-        const nextShapeStyle = { color: nextShapeColor, rounded: 'rounded-md' };
+        const nextShapeStyle = { color: randomizedNextColor, rounded: 'rounded-md' };
 
         nextShapeRowCopy[3] = nextShapeStyle;
         nextShapeGridCopy[2] = nextShapeRowCopy
         return {
           ...state,
-          nextShapeGrid: nextShapeGridCopy
+          nextShapeGrid: nextShapeGridCopy,
+          nextShapeColor: randomizedNextColor
         }
     default:
       throw new Error(`Unknown action type: ${action.type}`);
@@ -91,7 +92,7 @@ function App() {
 
   const displayNextShape = useCallback(() => {
     dispatch({
-      type: 'NEXT_COLOR_SHAPE'
+      type: 'GENERATE_NEXT_SHAPE'
     })
   }, [])
 
