@@ -2,6 +2,7 @@ import { useEffect, useCallback, useReducer } from 'react';
 
 import './App.css';
 import Cell from './components/Emptycell/Cell';
+import NextShapePreview from './components/Emptycell/NextShapePreview/NextShapePreview';
 
 
 const randomColor = () => {
@@ -28,10 +29,10 @@ const initialState = {
 }
 
 const reducer = (state = initialState, action) => {
-  const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeGrid, nextShapeColor } = state;
+  const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor } = state;
 
   switch (action.type) {
-    case 'INTRODUCE_RANDOM_COLOR_SHAPE':
+    case 'RANDOM_COLOR_SHAPE':
       const tetrisGridCopy = [...tetrisGrid];
       const firstRow = [...tetrisGridCopy[0]];
 
@@ -43,6 +44,7 @@ const reducer = (state = initialState, action) => {
         currentShapeColor: nextShapeColor,
         tetrisGrid: tetrisGridCopy,
         currentRowIndex: 0,
+        nextShapeColor: randomColor()
       }
     case 'MOVE_COLOR_SHAPE':
       const secondTetrisGridCopy = [...tetrisGrid]
@@ -60,53 +62,40 @@ const reducer = (state = initialState, action) => {
         tetrisGrid: secondTetrisGridCopy,
         currentRowIndex: currentRowIndex + 1,
       }
-      case 'GENERATE_NEXT_SHAPE':
-        const randomizedNextColor = randomColor()
-        const nextShapeGridCopy = [...nextShapeGrid]
-        const nextShapeRowCopy = [...nextShapeGridCopy[2]];
-        const nextShapeStyle = { color: randomizedNextColor, rounded: 'rounded-md' };
 
-        nextShapeRowCopy[3] = nextShapeStyle;
-        nextShapeGridCopy[2] = nextShapeRowCopy
-        return {
-          ...state,
-          nextShapeGrid: nextShapeGridCopy,
-          nextShapeColor: randomizedNextColor
-        }
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
 }
 
-const checkIfRowBelowExist = (grid, rowIndex) => grid[rowIndex + 1];
-const checkIfRowBelowIsTaken = (grid, rowIndex) => grid[rowIndex + 1][5].color === '';
+const checkIfNextMovePossible = (grid, rowIndex) => {
+
+  const checkIfRowBelowExist = (grid, rowIndex) => grid[rowIndex + 1];
+  const checkIfRowBelowIsTaken = (grid, rowIndex) => grid[rowIndex + 1][5].color === '';
+
+  return checkIfRowBelowExist(grid, rowIndex) && checkIfRowBelowIsTaken(grid, rowIndex)
+}
 
 function App() {
 
   const [state, dispatch] = useReducer(reducer, initialState);
+
   const introduceShape = useCallback(() => {
     dispatch({
-      type: 'INTRODUCE_RANDOM_COLOR_SHAPE'
-    })
-  }, [])
-
-  const displayNextShape = useCallback(() => {
-    dispatch({
-      type: 'GENERATE_NEXT_SHAPE'
+      type: 'RANDOM_COLOR_SHAPE'
     })
   }, [])
 
   const moveShape = useCallback(() => {
     const { tetrisGrid, currentRowIndex } = state;
-    if (checkIfRowBelowExist(tetrisGrid, currentRowIndex) && checkIfRowBelowIsTaken(tetrisGrid, currentRowIndex)) {
+    if (checkIfNextMovePossible(tetrisGrid, currentRowIndex)) {
       dispatch({
         type: 'MOVE_COLOR_SHAPE'
       })
     } else {
       introduceShape();
-      displayNextShape();
     }
-  }, [introduceShape, state, displayNextShape])
+  }, [introduceShape, state])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -117,9 +106,8 @@ function App() {
 
   useEffect(() => {
     introduceShape();
-    displayNextShape();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayNextShape]);
+  }, []);
 
   return (
 
@@ -127,7 +115,7 @@ function App() {
 
       <div className="w-[35rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
         <section className="w-[19.25rem] h-[100%] bg-greybg grid grid-cols-11 grid-rows-22">
-          {state.tetrisGrid.flat().map((box, index) => <Cell key={index} color={box.color} roundedshape={box.rounded} />)}
+          {state.tetrisGrid.flat().map((cell, index) => <Cell key={index} color={cell.color} roundedshape={cell.rounded} />)}
         </section>
 
         <section className="w-[10.5rem] h-[100%] rounded-sm flexflex-wrap">
@@ -136,7 +124,7 @@ function App() {
             <h3 className="w-[100%] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Next</h3>
             <div className="w-[10.5rem] h-[8.75rem] bg-greybg rounded-md flex flex-wrap justify-center items-center content-center">
               <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-4">
-              {state.nextShapeGrid.flat().map((box, index) => <Cell key={index} color={box.color} roundedshape={box.rounded} />)}
+                <NextShapePreview nextShapeColor={state.nextShapeColor} />
               </section>
             </div>
           </section>
