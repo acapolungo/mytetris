@@ -1,8 +1,7 @@
 import { useEffect, useCallback, useReducer } from 'react';
-
 import './App.css';
 import Cell from './components/Emptycell/Cell';
-import NextShapePreview from './components/Emptycell/NextShapePreview/NextShapePreview';
+import NextShapePreview from './components/NextShapePreview/NextShapePreview';
 
 
 const randomColor = () => {
@@ -32,7 +31,7 @@ const reducer = (state = initialState, action) => {
   const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor } = state;
 
   switch (action.type) {
-    case 'RANDOM_COLOR_SHAPE':
+    case 'INTRODUCE_SHAPE':
       const tetrisGridCopy = [...tetrisGrid];
       const firstRow = [...tetrisGridCopy[0]];
 
@@ -82,12 +81,13 @@ function App() {
 
   const introduceShape = useCallback(() => {
     dispatch({
-      type: 'RANDOM_COLOR_SHAPE'
+      type: 'INTRODUCE_SHAPE'
     })
   }, [])
 
   const moveShape = useCallback(() => {
     const { tetrisGrid, currentRowIndex } = state;
+
     if (checkIfNextMovePossible(tetrisGrid, currentRowIndex)) {
       dispatch({
         type: 'MOVE_COLOR_SHAPE'
