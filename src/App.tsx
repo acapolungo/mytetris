@@ -3,22 +3,36 @@ import './App.css';
 import Cell from './components/Emptycell/Cell';
 import NextShapePreview from './components/NextShapePreview/NextShapePreview';
 
-interface Grid {
+interface cellElement {
     color: string;
     rounded: string;
 }
 
+type Color = "yellow" | "orange" | "purple" | "blue" | "red";
+
+interface ShapeAction {
+    type: 'INTRODUCE_SHAPE' | 'MOVE_COLOR_SHAPE';
+}
+
+type tetrisState = {
+    tetrisGrid: { color: string, rounded: string }[][];
+    currentRowIndex: number;
+    currentShapeColor: string;
+    nextShapeGrid: { color: string, rounded: string }[][];
+    nextShapeColor: string;
+}
+
 const randomColor = (): string => {
-    const arrayOfColors = ["yellow", "orange", "purple", "blue", "red"];
+    const arrayOfColors: Color[] = ["yellow", "orange", "purple", "blue", "red"];
     return arrayOfColors[Math.floor(Math.random() * arrayOfColors.length)]
 };
 
-function emptyGrid(): Grid[][] {
+function emptyGrid(): cellElement[][] {
     const rowsOfCells = new Array(11).fill({ color: '', rounded: '' });
     return new Array(22).fill(rowsOfCells);
 }
 
-function emptyNextShapeGrid(): Grid[][] {
+function emptyNextShapeGrid(): cellElement[][] {
     const rowsOfCells = new Array(6).fill({ color: '', rounded: '' });
     return new Array(5).fill(rowsOfCells);
 }
@@ -31,20 +45,7 @@ const initialState = {
     nextShapeColor: randomColor(),
 }
 
-interface ShapeAction {
-    type: 'INTRODUCE_SHAPE' | 'MOVE_COLOR_SHAPE';
-}
-
-// Doit on créer un type ?
-// type tetrisState = {
-//     tetrisGrid: { color: string, rounded: string }[][];
-//     currentRowIndex: number;
-//     currentShapeColor: string;
-//     nextShapeGrid: { color: string, rounded: string }[][];
-//     nextShapeColor: string;
-// }
-
-const reducer = (state: typeof initialState = initialState, action: ShapeAction) => {
+const reducer = (state: tetrisState = initialState, action: ShapeAction) => {
     const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor } = state;
 
     switch (action.type) {
@@ -80,21 +81,20 @@ const reducer = (state: typeof initialState = initialState, action: ShapeAction)
             }
 
         default:
-            // throw new Error(`Unknown action type: ${action.type}`);
             return state
     }
 }
 
-const checkIfNextMovePossible = (grid: Grid[][], rowIndex: number) => {
+const checkIfNextMovePossible = (grid: cellElement[][], rowIndex: number): boolean => {
 
-    const checkIfRowBelowExist = (grid: Grid[][], rowIndex: number) => grid[rowIndex + 1];
-    const checkIfRowBelowIsTaken = (grid: Grid[][], rowIndex: number) => grid[rowIndex + 1][5].color === '';
+    const checkIfRowBelowExist = (grid: cellElement[][], rowIndex: number): cellElement[] => grid[rowIndex + 1];
+    const checkIfRowBelowIsTaken = (grid: cellElement[][], rowIndex: number): boolean => grid[rowIndex + 1][5].color === '';
 
     return checkIfRowBelowExist(grid, rowIndex) && checkIfRowBelowIsTaken(grid, rowIndex)
 }
 
-function App() {
-
+function App(): JSX.Element {
+    // <(state: tetrisState | undefined, action: ShapeAction) => tetrisState>
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const introduceShape = useCallback(() => {
