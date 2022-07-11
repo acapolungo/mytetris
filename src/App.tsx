@@ -3,7 +3,7 @@ import './App.css';
 import Cell from './components/Emptycell/Cell';
 import NextShapePreview from './components/NextShapePreview/NextShapePreview';
 
-interface cellElement {
+interface CellElement {
     color: string;
     rounded: string;
 }
@@ -14,7 +14,7 @@ interface ShapeAction {
     type: 'INTRODUCE_SHAPE' | 'MOVE_COLOR_SHAPE';
 }
 
-type tetrisState = {
+type TetrisState = {
     tetrisGrid: { color: string, rounded: string }[][];
     currentRowIndex: number;
     currentShapeColor: string;
@@ -27,12 +27,12 @@ const randomColor = (): string => {
     return arrayOfColors[Math.floor(Math.random() * arrayOfColors.length)]
 };
 
-function emptyGrid(): cellElement[][] {
+function emptyGrid(): CellElement[][] {
     const rowsOfCells = new Array(11).fill({ color: '', rounded: '' });
     return new Array(22).fill(rowsOfCells);
 }
 
-function emptyNextShapeGrid(): cellElement[][] {
+function emptyNextShapeGrid(): CellElement[][] {
     const rowsOfCells = new Array(6).fill({ color: '', rounded: '' });
     return new Array(5).fill(rowsOfCells);
 }
@@ -45,7 +45,7 @@ const initialState = {
     nextShapeColor: randomColor(),
 }
 
-const reducer = (state: tetrisState = initialState, action: ShapeAction) => {
+const reducer = (state: typeof initialState, action: ShapeAction): TetrisState => {
     const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor } = state;
 
     switch (action.type) {
@@ -85,16 +85,15 @@ const reducer = (state: tetrisState = initialState, action: ShapeAction) => {
     }
 }
 
-const checkIfNextMovePossible = (grid: cellElement[][], rowIndex: number): boolean => {
+const checkIfNextMovePossible = (grid: CellElement[][], rowIndex: number): boolean => {
 
-    const checkIfRowBelowExist = (grid: cellElement[][], rowIndex: number): cellElement[] => grid[rowIndex + 1];
-    const checkIfRowBelowIsTaken = (grid: cellElement[][], rowIndex: number): boolean => grid[rowIndex + 1][5].color === '';
+    const checkIfRowBelowExist = (grid: CellElement[][], rowIndex: number): CellElement[] => grid[rowIndex + 1];
+    const checkIfRowBelowIsTaken = (grid: CellElement[][], rowIndex: number): boolean => grid[rowIndex + 1][5].color === '';
 
     return checkIfRowBelowExist(grid, rowIndex) && checkIfRowBelowIsTaken(grid, rowIndex)
 }
 
 function App(): JSX.Element {
-    // <(state: tetrisState | undefined, action: ShapeAction) => tetrisState>
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const introduceShape = useCallback(() => {
