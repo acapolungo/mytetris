@@ -3,7 +3,7 @@ import './App.css';
 import Cell from './components/Emptycell/Cell';
 import NextShapePreview from './components/NextShapePreview/NextShapePreview';
 
-interface Cells {
+interface CellInterface {
     color: string;
     rounded: string;
 }
@@ -15,24 +15,24 @@ interface ShapeAction {
 }
 
 type TetrisState = {
-    tetrisGrid: Cells[][];
+    tetrisGrid: CellInterface[][];
     currentRowIndex: number;
     currentShapeColor: string;
-    nextShapeGrid: Cells[][];
+    nextShapeGrid: CellInterface[][];
     nextShapeColor: string;
 }
 
-const randomColor = (): string => {
+const randomColor = (): Color => {
     const arrayOfColors: Color[] = ["yellow", "orange", "purple", "blue", "red"];
     return arrayOfColors[Math.floor(Math.random() * arrayOfColors.length)]
 };
 
-function emptyGrid(): Cells[][] {
+function emptyGrid(): CellInterface[][] {
     const rowsOfCells = new Array(11).fill({ color: '', rounded: '' });
     return new Array(22).fill(rowsOfCells);
 }
 
-function emptyNextShapeGrid(): Cells[][] {
+function emptyNextShapeGrid(): CellInterface[][] {
     const rowsOfCells = new Array(6).fill({ color: '', rounded: '' });
     return new Array(5).fill(rowsOfCells);
 }
@@ -45,7 +45,7 @@ const initialState = {
     nextShapeColor: randomColor(),
 }
 
-const reducer = (state: TetrisState , action: ShapeAction): TetrisState => {
+const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
     const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor } = state;
 
     switch (action.type) {
@@ -82,10 +82,10 @@ const reducer = (state: TetrisState , action: ShapeAction): TetrisState => {
     }
 }
 
-const checkIfRowBelowExist = (grid: Cells[][], rowIndex: number): Cells[] | undefined => grid[rowIndex + 1];
-const checkIfRowBelowIsTaken = (grid: Cells[][], rowIndex: number): boolean => grid[rowIndex + 1][5].color === '';
-const checkIfNextMovePossible = (grid: Cells[][], rowIndex: number): boolean | undefined => {
-        return checkIfRowBelowExist(grid, rowIndex) && checkIfRowBelowIsTaken(grid, rowIndex)
+const checkIfRowBelowExist = (grid: CellInterface[][], rowIndex: number): CellInterface[] | undefined => grid[rowIndex + 1];
+const checkIfRowBelowIsTaken = (grid: CellInterface[][], rowIndex: number): boolean => grid[rowIndex + 1][5].color === '';
+const checkIfNextMovePossible = (grid: CellInterface[][], rowIndex: number): boolean | undefined => {
+    return checkIfRowBelowExist(grid, rowIndex) && checkIfRowBelowIsTaken(grid, rowIndex)
 }
 
 function App(): JSX.Element {
