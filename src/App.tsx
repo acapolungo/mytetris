@@ -207,43 +207,40 @@ function App(): JSX.Element {
     //     return () => {if (intervalRef.current){clearInterval(intervalRef.current);}}
     // }, [moveShape]);
 
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-        const interval = setInterval(() => {
-            moveShape();
-        }, 500);
-        return () => clearInterval(interval)
-    }, [moveShape]);
+        intervalRef.current = setTimeout(() => moveShape(), 500);
+        return () => {
+            console.log('clearInterval');
+            if (intervalRef.current !== null) {
+                return clearInterval(intervalRef.current);
+            }
+        };
+    }, [moveShape, state.tetrisGrid]);
 
     useEffect(() => {
         introduceShape();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
     const handleUserKeyPress = useCallback((event: { code: string; preventDefault: () => void; }) => {
 
-        if (timerRef.current) {
-            clearTimeout(timerRef.current)
-        }
         if (event.code === "ArrowLeft") {
             event.preventDefault();
             //console.log("Left key was pressed. Run your function.");
             moveShapeLeft()
-            timerRef.current = setTimeout(() => moveShape(), 500);
         }
         if (event.code === "ArrowRight") {
             event.preventDefault();
             //console.log("Left key was pressed. Run your function.");
             moveShapeRight()
-            timerRef.current = setTimeout(() => moveShape(), 500);
         }
         if (event.code === "ArrowDown") {
             event.preventDefault();
             //console.log("Left key was pressed. Run your function.");
             moveShapeDown()
-            timerRef.current = setTimeout(() => moveShape(), 500);
         }
-    }, [moveShape, moveShapeDown, moveShapeLeft, moveShapeRight])
+    }, [moveShapeDown, moveShapeLeft, moveShapeRight])
 
     useEffect(() => {
         document.addEventListener("keydown", handleUserKeyPress);
