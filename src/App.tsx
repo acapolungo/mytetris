@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useReducer } from 'react';
+import { useEffect, useCallback, useReducer, useRef } from 'react';
 import './App.css';
 import Cell from './components/Emptycell/Cell';
 import NextShapePreview from './components/NextShapePreview/NextShapePreview';
@@ -134,14 +134,10 @@ const checkIfNextMovePossible = (grid: CellInterface[][], rowIndex: number, posi
 }
 
 const checkGoToLeft = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    // console.log('test si une case est libre', checkIfLeftMoveExist(grid, rowIndex, 1))
-    // console.log('test si une case est colorée', checkIfLeftCellIsTaken(grid, rowIndex, 1))
     return checkIfLeftMoveExist(grid, rowIndex, position) && checkIfLeftCellIsTaken(grid, rowIndex, position)
 }
 
 const checkGoToRight = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    // console.log('test si une case est libre', checkIfRightMoveExist(grid, rowIndex, 1))
-    // console.log('test si une case est colorée', checkIfRightCellIsTaken(grid, rowIndex, 1))
     return checkIfRightMoveExist(grid, rowIndex, position) && checkIfRightCellIsTaken(grid, rowIndex, position)
 }
 
@@ -156,6 +152,7 @@ function App(): JSX.Element {
 
     const moveShape = useCallback(() => {
         const { tetrisGrid, currentRowIndex, positionInGrid } = state;
+
         if (checkIfNextMovePossible(tetrisGrid, currentRowIndex, positionInGrid)) {
             dispatch({
                 type: 'MOVE_COLOR_SHAPE'
@@ -190,7 +187,6 @@ function App(): JSX.Element {
     }, [state])
 
     const moveShapeDown = useCallback(() => {
-
         const { tetrisGrid, currentRowIndex, positionInGrid } = state;
 
         if (checkIfNextMovePossible(tetrisGrid, currentRowIndex, positionInGrid)) {
@@ -202,11 +198,20 @@ function App(): JSX.Element {
         }
     }, [state])
 
+    // const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    // useEffect(() => {
+    //     console.log('test')
+    //     intervalRef.current = setInterval(() => {
+    //         moveShape();
+    //     }, 500);
+    //     return () => {if (intervalRef.current){clearInterval(intervalRef.current);}}
+    // }, [moveShape]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             moveShape();
         }, 500);
-        return () => clearInterval(interval);
+        return () => clearInterval(interval)
     }, [moveShape]);
 
     useEffect(() => {
@@ -214,32 +219,38 @@ function App(): JSX.Element {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const handleUserKeyPress = useCallback((event: { code: string; preventDefault: () => void; }) => {
+
+        if (timerRef.current) {
+            clearTimeout(timerRef.current)
+        }
+        if (event.code === "ArrowLeft") {
+            event.preventDefault();
+            //console.log("Left key was pressed. Run your function.");
+            moveShapeLeft()
+            timerRef.current = setTimeout(() => moveShape(), 500);
+        }
+        if (event.code === "ArrowRight") {
+            event.preventDefault();
+            //console.log("Left key was pressed. Run your function.");
+            moveShapeRight()
+            timerRef.current = setTimeout(() => moveShape(), 500);
+        }
+        if (event.code === "ArrowDown") {
+            event.preventDefault();
+            //console.log("Left key was pressed. Run your function.");
+            moveShapeDown()
+            timerRef.current = setTimeout(() => moveShape(), 500);
+        }
+    }, [moveShape, moveShapeDown, moveShapeLeft, moveShapeRight])
+
     useEffect(() => {
-        const listener = (event: { code: string; preventDefault: () => void; }) => {
-            if (event.code === "ArrowLeft") {
-                event.preventDefault();
-                //console.log("Left key was pressed. Run your function.");
-                // callMyFunction();
-                moveShapeLeft()
-            }
-            if (event.code === "ArrowRight") {
-                event.preventDefault();
-                //console.log("Left key was pressed. Run your function.");
-                // callMyFunction();
-                moveShapeRight()
-            }
-            if (event.code === "ArrowDown") {
-                event.preventDefault();
-                //console.log("Left key was pressed. Run your function.");
-                // callMyFunction();
-                moveShapeDown()
-            }
-        };
-        document.addEventListener("keydown", listener);
+        document.addEventListener("keydown", handleUserKeyPress);
         return () => {
-            document.removeEventListener("keydown", listener);;
+            document.removeEventListener("keydown", handleUserKeyPress);
         };
-    }, [moveShapeLeft, moveShapeRight, moveShapeDown, moveShape]);
+    }, [handleUserKeyPress]);
 
     return (
 
