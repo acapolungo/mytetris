@@ -10,8 +10,11 @@ interface CellInterface {
 
 type Color = "yellow" | "orange" | "purple" | "blue" | "red";
 
-interface ShapeAction {
-    type: 'INTRODUCE_SHAPE' | 'MOVE_COLOR_SHAPE' | 'MOVE_LEFT' | 'MOVE_RIGHT';
+type Direction = "left" | "right" | "down"
+
+type ShapeAction = { type: "INTRODUCE_SHAPE" } | {
+    type: 'MOVE_SHAPE';
+    payload: { direction: Direction }
 }
 
 type TetrisState = {
@@ -20,7 +23,7 @@ type TetrisState = {
     currentShapeColor: string;
     nextShapeGrid: CellInterface[][];
     nextShapeColor: string;
-    positionInGrid: number;
+    columnPosition: number;
 }
 
 const randomColor = (): Color => {
@@ -45,17 +48,18 @@ const initialState = {
     currentShapeColor: randomColor(),
     nextShapeGrid: emptyNextShapeGrid(),
     nextShapeColor: randomColor(),
-    positionInGrid: 5,
+    columnPosition: 5,
 }
 
 const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
-    const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor, positionInGrid } = state;
+    const { tetrisGrid, currentRowIndex, currentShapeColor, nextShapeColor, columnPosition } = state;
+    const { type } = action;
     const tetrisGridCopy = [...tetrisGrid];
     const activeCellStyle = { color: currentShapeColor, rounded: 'rounded-md' }
     const inactiveCellStyle = { color: '', rounded: '' };
-    const movementCounter = 1
+    let nextColumnPosition = columnPosition;
 
-    switch (action.type) {
+    switch (type) {
         case 'INTRODUCE_SHAPE':
             const firstRow = [...tetrisGridCopy[0]];
             firstRow[5] = { color: nextShapeColor, rounded: 'rounded-md' };
@@ -67,187 +71,130 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                 tetrisGrid: tetrisGridCopy,
                 currentRowIndex: 0,
                 nextShapeColor: randomColor(),
-                positionInGrid: 5,
+                columnPosition: 5,
             }
-        case 'MOVE_COLOR_SHAPE':
+        case 'MOVE_SHAPE':
+            const { payload } = action;
             const currentRowCopy = [...tetrisGridCopy[currentRowIndex]];
-            const nextRowCopy = [...tetrisGridCopy[currentRowIndex + 1]];;
 
-            currentRowCopy[positionInGrid] = inactiveCellStyle;
-            nextRowCopy[positionInGrid] = activeCellStyle;
-            tetrisGridCopy[currentRowIndex] = currentRowCopy;
-            tetrisGridCopy[currentRowIndex + 1] = nextRowCopy;
+            currentRowCopy[columnPosition] = inactiveCellStyle;
 
-            return {
-                ...state,
-                tetrisGrid: tetrisGridCopy,
-                currentRowIndex: currentRowIndex + 1,
+            if (payload?.direction === 'left' && moveLeftIsPossible(tetrisGrid, currentRowIndex, columnPosition)) {
+                nextColumnPosition = columnPosition - 1
+                currentRowCopy[nextColumnPosition] = activeCellStyle;
+                tetrisGridCopy[currentRowIndex] = currentRowCopy;
+                return {
+                    ...state,
+                    tetrisGrid: tetrisGridCopy,
+                    columnPosition: nextColumnPosition,
+                }
+            } else if (payload?.direction === 'right' && moveRightIsPossible(tetrisGrid, currentRowIndex, columnPosition)) {
+                nextColumnPosition = columnPosition + 1;
+                currentRowCopy[nextColumnPosition] = activeCellStyle;
+                tetrisGridCopy[currentRowIndex] = currentRowCopy;
+
+                return {
+                    ...state,
+                    tetrisGrid: tetrisGridCopy,
+                    columnPosition: nextColumnPosition,
+                }
+            } else if (payload?.direction === 'down' && moveDownIsPossible(tetrisGrid, currentRowIndex, columnPosition)) {
+                const nextRowCopy = [...tetrisGridCopy[currentRowIndex + 1]]
+                currentRowCopy[nextColumnPosition] = inactiveCellStyle;
+                nextRowCopy[nextColumnPosition] = activeCellStyle;
+                tetrisGridCopy[currentRowIndex] = currentRowCopy;
+                tetrisGridCopy[currentRowIndex + 1] = nextRowCopy;
+                return {
+                    ...state,
+                    tetrisGrid: tetrisGridCopy,
+                    currentRowIndex: currentRowIndex + 1,
+                }
+            } else {
+                return state
             }
-        case 'MOVE_LEFT':
-            const currentRowCopy2 = [...tetrisGridCopy[currentRowIndex]];
-            currentRowCopy2[positionInGrid] = inactiveCellStyle;
-            const newPositionToTheLeft = positionInGrid - movementCounter
-            currentRowCopy2[newPositionToTheLeft] = activeCellStyle;
-            tetrisGridCopy[currentRowIndex] = currentRowCopy2;
-
-            return {
-                ...state,
-                tetrisGrid: tetrisGridCopy,
-                positionInGrid: newPositionToTheLeft,
-            }
-        case 'MOVE_RIGHT':
-            const currentRowCopy3 = [...tetrisGridCopy[currentRowIndex]];
-            currentRowCopy3[positionInGrid] = inactiveCellStyle;
-            const newPositionToTheRight = positionInGrid + movementCounter
-            currentRowCopy3[newPositionToTheRight] = activeCellStyle;
-            tetrisGridCopy[currentRowIndex] = currentRowCopy3;
-
-            return {
-                ...state,
-                tetrisGrid: tetrisGridCopy,
-                positionInGrid: newPositionToTheRight,
-            }
-        default:
-            throw new Error(`Unknown action type: ${action.type}`);
     }
 }
 
-const checkIfRowBelowExist = (grid: CellInterface[][], rowIndex: number): CellInterface[] | undefined => grid[rowIndex + 1];
-const checkIfRowBelowIsTaken = (grid: CellInterface[][], rowIndex: number, position: number): boolean => grid[rowIndex + 1][position].color === '';
-
-const checkIfLeftMoveExist = (grid: CellInterface[][], rowIndex: number, position: number) => {
-    return grid[rowIndex][position - 1] !== undefined;
+const rowBelowExist = (grid: CellInterface[][], rowIndex: number): boolean => {
+    return Boolean(grid[rowIndex + 1]);
 }
-const checkIfLeftCellIsTaken = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    return grid[rowIndex][position - 1].color === '';
+const rowBelowIsFree = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return grid[rowIndex + 1][columnIndex].color === '';
+}
+const leftCellExist = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return grid[rowIndex][columnIndex - 1] !== undefined;
+}
+const leftCellIsFree = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return grid[rowIndex][columnIndex - 1].color === '';
 };
-
-const checkIfRightMoveExist = (grid: CellInterface[][], rowIndex: number, position: number): boolean => {
-    return grid[rowIndex][position + 1] !== undefined
+const rightCellExist = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return grid[rowIndex][columnIndex + 1] !== undefined
 }
-const checkIfRightCellIsTaken = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    return grid[rowIndex][position + 1].color === "";
+const rightCellIsFree = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return grid[rowIndex][columnIndex + 1].color === "";
 };
-
-const checkIfNextMovePossible = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    return checkIfRowBelowExist(grid, rowIndex) && checkIfRowBelowIsTaken(grid, rowIndex, position)
+const moveDownIsPossible = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return rowBelowExist(grid, rowIndex) && rowBelowIsFree(grid, rowIndex, columnIndex);
 }
-
-const checkGoToLeft = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    return checkIfLeftMoveExist(grid, rowIndex, position) && checkIfLeftCellIsTaken(grid, rowIndex, position)
+const moveLeftIsPossible = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return leftCellExist(grid, rowIndex, columnIndex) && leftCellIsFree(grid, rowIndex, columnIndex);
 }
-
-const checkGoToRight = (grid: CellInterface[][], rowIndex: number, position: number): boolean | undefined => {
-    return checkIfRightMoveExist(grid, rowIndex, position) && checkIfRightCellIsTaken(grid, rowIndex, position)
+const moveRightIsPossible = (grid: CellInterface[][], rowIndex: number, columnIndex: number): boolean => {
+    return rightCellExist(grid, rowIndex, columnIndex) && rightCellIsFree(grid, rowIndex, columnIndex);
 }
 
 function App(): JSX.Element {
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const [{ tetrisGrid, currentRowIndex, columnPosition, nextShapeColor }, dispatch] = useReducer(reducer, initialState);
 
-    const introduceShape = useCallback(() => {
-        dispatch({
-            type: 'INTRODUCE_SHAPE'
-        })
-    }, [])
+    const introduceShape = useCallback(() => { dispatch({ type: 'INTRODUCE_SHAPE' }) }, []);
+    const moveShapeDown = () => dispatch({ type: 'MOVE_SHAPE', payload: { direction: 'down' } });
+    const moveShapeLeft = () => dispatch({ type: 'MOVE_SHAPE', payload: { direction: 'left' } });
+    const moveShapeRight = () => dispatch({ type: 'MOVE_SHAPE', payload: { direction: 'right' } });
 
-    const moveShape = useCallback(() => {
-        const { tetrisGrid, currentRowIndex, positionInGrid } = state;
-
-        if (checkIfNextMovePossible(tetrisGrid, currentRowIndex, positionInGrid)) {
-            dispatch({
-                type: 'MOVE_COLOR_SHAPE'
-            })
+    const tryMoveShapeLeft = useCallback(() => { moveShapeLeft() }, [])
+    const tryMoveShapeRight = useCallback(() => { moveShapeRight() }, [])
+    const tryMoveShapeDown = useCallback(() => {
+        if (moveDownIsPossible(tetrisGrid, currentRowIndex, columnPosition)) {
+            moveShapeDown();
         } else {
             introduceShape();
         }
-    }, [introduceShape, state])
-
-    const moveShapeLeft = useCallback(() => {
-        const { tetrisGrid, currentRowIndex, positionInGrid } = state;
-
-        if (checkGoToLeft(tetrisGrid, currentRowIndex, positionInGrid)) {
-            dispatch({
-                type: 'MOVE_LEFT'
-            })
-        } else {
-            return
-        }
-    }, [state])
-
-    const moveShapeRight = useCallback(() => {
-        const { tetrisGrid, currentRowIndex, positionInGrid } = state;
-
-        if (checkGoToRight(tetrisGrid, currentRowIndex, positionInGrid)) {
-            dispatch({
-                type: 'MOVE_RIGHT'
-            })
-        } else {
-            return
-        }
-    }, [state])
-
-    const moveShapeDown = useCallback(() => {
-        const { tetrisGrid, currentRowIndex, positionInGrid } = state;
-
-        if (checkIfNextMovePossible(tetrisGrid, currentRowIndex, positionInGrid)) {
-            dispatch({
-                type: 'MOVE_COLOR_SHAPE'
-            })
-        } else {
-            return
-        }
-    }, [state])
-
-    // const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    // useEffect(() => {
-    //     console.log('test')
-    //     intervalRef.current = setInterval(() => {
-    //         moveShape();
-    //     }, 500);
-    //     return () => {if (intervalRef.current){clearInterval(intervalRef.current);}}
-    // }, [moveShape]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentRowIndex, tetrisGrid, columnPosition])
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-        intervalRef.current = setTimeout(() => moveShape(), 500);
+        intervalRef.current = setTimeout(() => tryMoveShapeDown(), 500);
         return () => {
-            console.log('clearInterval');
             if (intervalRef.current !== null) {
                 return clearInterval(intervalRef.current);
             }
         };
-    }, [moveShape, state.tetrisGrid]);
+    }, [tryMoveShapeDown]);
 
     useEffect(() => {
         introduceShape();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleUserKeyPress = useCallback((event: { code: string; preventDefault: () => void; }) => {
-
+    const handleUserKeyPress = useCallback((event: { preventDefault: () => void; code: string; }) => {
+        event.preventDefault();
         if (event.code === "ArrowLeft") {
-            event.preventDefault();
-            //console.log("Left key was pressed. Run your function.");
-            moveShapeLeft()
+            tryMoveShapeLeft();
         }
         if (event.code === "ArrowRight") {
-            event.preventDefault();
-            //console.log("Left key was pressed. Run your function.");
-            moveShapeRight()
+            tryMoveShapeRight();
         }
         if (event.code === "ArrowDown") {
-            event.preventDefault();
-            //console.log("Left key was pressed. Run your function.");
-            moveShapeDown()
+            tryMoveShapeDown();
         }
-    }, [moveShapeDown, moveShapeLeft, moveShapeRight])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     useEffect(() => {
         document.addEventListener("keydown", handleUserKeyPress);
-        return () => {
-            document.removeEventListener("keydown", handleUserKeyPress);
-        };
-    }, [handleUserKeyPress]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
 
@@ -255,7 +202,7 @@ function App(): JSX.Element {
 
             <div className="w-[35rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
                 <section className="w-[19.25rem] h-[100%] bg-greybg grid grid-cols-11 grid-rows-22">
-                    {state.tetrisGrid.flat().map((cell, index) => <Cell key={index} color={cell.color} roundedshape={cell.rounded} />)}
+                    {tetrisGrid.flat().map((cell, index) => <Cell key={index} color={cell.color} roundedshape={cell.rounded} />)}
                 </section>
 
                 <section className="w-[10.5rem] h-[100%] rounded-sm flexflex-wrap">
@@ -264,7 +211,7 @@ function App(): JSX.Element {
                         <h3 className="w-[100%] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Next</h3>
                         <div className="w-[10.5rem] h-[8.75rem] bg-greybg rounded-md flex flex-wrap justify-center items-center content-center">
                             <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-4">
-                                <NextShapePreview nextShapeColor={state.nextShapeColor} />
+                                <NextShapePreview nextShapeColor={nextShapeColor} />
                             </section>
                         </div>
                     </section>
