@@ -51,42 +51,30 @@ const initialState = {
     currentColumnIndex: 5,
 }
 
-const tetrisGridWithShapeMovedLeft = (state: TetrisState, tetrisGridCopy: CellInterface[][], currentRowCopy: CellInterface[], currentRowIndex: number, currentColumnIndex: number, activeCellStyle: { color: string; rounded: string; }, nextCurrentColumnIndex: number) => {
+const tetrisGridWithShapeMovedLeft = (tetrisGridCopy: CellInterface[][], currentRowCopy: CellInterface[], currentRowIndex: number, currentColumnIndex: number, activeCellStyle: { color: string; rounded: string; }, nextCurrentColumnIndex: number) => {
     nextCurrentColumnIndex = currentColumnIndex - 1
     currentRowCopy[nextCurrentColumnIndex] = activeCellStyle;
     tetrisGridCopy[currentRowIndex] = currentRowCopy;
 
-    return {
-        ...state,
-        tetrisGrid: tetrisGridCopy,
-        currentColumnIndex: nextCurrentColumnIndex,
-    }
+    return tetrisGridCopy
 }
 
-const tetrisGridWithShapeMovedRight = (state: TetrisState, tetrisGridCopy: CellInterface[][], currentRowCopy: CellInterface[], currentRowIndex: number, currentColumnIndex: number, activeCellStyle: CellInterface, nextCurrentColumnIndex: number) => {
+const tetrisGridWithShapeMovedRight = (tetrisGridCopy: CellInterface[][], currentRowCopy: CellInterface[], currentRowIndex: number, currentColumnIndex: number, activeCellStyle: CellInterface, nextCurrentColumnIndex: number) => {
     nextCurrentColumnIndex = currentColumnIndex + 1;
     currentRowCopy[nextCurrentColumnIndex] = activeCellStyle;
     tetrisGridCopy[currentRowIndex] = currentRowCopy;
 
-    return {
-        ...state,
-        tetrisGrid: tetrisGridCopy,
-        currentColumnIndex: nextCurrentColumnIndex,
-    }
+    return tetrisGridCopy
 }
 
-const tetrisGridWithShapeMovedDown = (state: TetrisState, tetrisGridCopy: CellInterface[][], currentRowCopy: CellInterface[], currentRowIndex: number, activeCellStyle: CellInterface, inactiveCellStyle: CellInterface, nextCurrentColumnIndex: number) => {
+const tetrisGridWithShapeMovedDown = (tetrisGridCopy: CellInterface[][], currentRowCopy: CellInterface[], currentRowIndex: number, activeCellStyle: CellInterface, inactiveCellStyle: CellInterface, nextCurrentColumnIndex: number) => {
     const nextRowCopy = [...tetrisGridCopy[currentRowIndex + 1]]
     currentRowCopy[nextCurrentColumnIndex] = inactiveCellStyle;
     nextRowCopy[nextCurrentColumnIndex] = activeCellStyle;
     tetrisGridCopy[currentRowIndex] = currentRowCopy;
     tetrisGridCopy[currentRowIndex + 1] = nextRowCopy;
 
-    return {
-        ...state,
-        tetrisGrid: tetrisGridCopy,
-        currentRowIndex: currentRowIndex + 1,
-    }
+    return tetrisGridCopy
 }
 
 const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
@@ -116,23 +104,43 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
             const currentRowCopy = [...tetrisGridCopy[currentRowIndex]];
 
             currentRowCopy[currentColumnIndex] = inactiveCellStyle;
+            let newState = state;
 
             switch (direction) {
                 case 'left':
                     if (moveLeftIsPossible(tetrisGrid, currentRowIndex, currentColumnIndex)) {
-                        return tetrisGridWithShapeMovedLeft(state, tetrisGridCopy, currentRowCopy, currentRowIndex, currentColumnIndex, activeCellStyle, nextCurrentColumnIndex)
+                        const newGrid = tetrisGridWithShapeMovedLeft(tetrisGridCopy, currentRowCopy, currentRowIndex, currentColumnIndex, activeCellStyle, nextCurrentColumnIndex)
+
+                        return newState = {
+                            ...state,
+                            tetrisGrid: newGrid,
+                            currentColumnIndex: currentColumnIndex - 1,
+                        }
                     }
-                    return state
+                    return newState
+
                 case 'right':
                     if (moveRightIsPossible(tetrisGrid, currentRowIndex, currentColumnIndex)) {
-                        return tetrisGridWithShapeMovedRight(state, tetrisGridCopy, currentRowCopy, currentRowIndex, currentColumnIndex, activeCellStyle, nextCurrentColumnIndex)
+                        const newGrid = tetrisGridWithShapeMovedRight(tetrisGridCopy, currentRowCopy, currentRowIndex, currentColumnIndex, activeCellStyle, nextCurrentColumnIndex)
+
+                        return newState = {
+                            ...state,
+                            tetrisGrid: newGrid,
+                            currentColumnIndex: currentColumnIndex + 1,
+                        }
                     }
-                    return state
+                    return newState
                 case 'down':
                     if (moveDownIsPossible(tetrisGrid, currentRowIndex, currentColumnIndex)) {
-                        return tetrisGridWithShapeMovedDown(state, tetrisGridCopy, currentRowCopy, currentRowIndex, activeCellStyle, inactiveCellStyle, nextCurrentColumnIndex)
+                        const newGrid = tetrisGridWithShapeMovedDown(tetrisGridCopy, currentRowCopy, currentRowIndex, activeCellStyle, inactiveCellStyle, nextCurrentColumnIndex)
+
+                        return newState = {
+                            ...state,
+                            tetrisGrid: newGrid,
+                            currentRowIndex: currentRowIndex + 1,
+                        }
                     }
-                    return state
+                    return newState
 
                 default:
                     return state
@@ -170,7 +178,7 @@ const moveRightIsPossible = (grid: CellInterface[][], rowIndex: number, columnIn
 
 function App(): JSX.Element {
     const [{ tetrisGrid, currentRowIndex, currentColumnIndex, nextShapeColor }, dispatch] = useReducer(reducer, initialState);
-    const [pause, setPause] = useState(false);
+    const [currentTimeout, setcurrentTimeout] = useState<null>(null)
 
     const introduceShape = useCallback(() => { dispatch({ type: 'INTRODUCE_SHAPE' }) }, []);
     const tryMoveShapeLeft = useCallback(() => { dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'left' } }) }, [])
@@ -186,15 +194,16 @@ function App(): JSX.Element {
 
 
     useEffect(() => {
-        if (!pause) {
+        if (currentTimeout === null) {
             const timeout = setTimeout(() => {
                 tryMoveShapeDown()
             }, 500);
+            setcurrentTimeout(currentTimeout)
             return () => {
                 clearTimeout(timeout);
             };
         }
-    }, [pause, tryMoveShapeDown]);
+    }, [currentTimeout, tryMoveShapeDown]);
 
     useEffect(() => {
         introduceShape();
