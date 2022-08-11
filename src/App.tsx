@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useReducer, useState } from 'react';
+import { useEffect, useCallback, useReducer, useState, useRef } from 'react';
 import './App.css';
 import Cell from './components/Emptycell/Cell';
 import NextShapePreview from './components/NextShapePreview/NextShapePreview';
@@ -9,12 +9,12 @@ interface CellInterface {
 }
 
 type Color = "yellow" | "orange" | "purple" | "blue" | "red";
-
-type Direction = "left" | "right" | "down"
+type Direction = "down" | "left" | "right"
 
 type ShapeAction = { type: "INTRODUCE_SHAPE" } | {
     type: 'TRY_MOVE_SHAPE';
-    payload: { direction: Direction }
+    payload: { direction: Direction, fallbackCallback: Function, clearCallback?: Function }
+
 }
 
 type TetrisState = {
@@ -84,7 +84,8 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
     const activeCellStyle = { color: currentShapeColor, rounded: 'rounded-md' }
     const inactiveCellStyle = { color: '', rounded: '' };
     let nextCurrentColumnIndex = currentColumnIndex;
-
+    console.log("prevState: ", state);
+    console.log("action: ", action);
     switch (type) {
         case 'INTRODUCE_SHAPE':
             const firstRow = [...tetrisGridCopy[0]];
@@ -100,7 +101,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                 currentColumnIndex: 5,
             }
         case 'TRY_MOVE_SHAPE':
-            const { direction } = action.payload;
+            const { direction, fallbackCallback, clearCallback } = action.payload;
             const currentRowCopy = [...tetrisGridCopy[currentRowIndex]];
 
             currentRowCopy[currentColumnIndex] = inactiveCellStyle;
@@ -116,6 +117,9 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                             tetrisGrid: newGrid,
                             currentColumnIndex: currentColumnIndex - 1,
                         }
+                    } else if (clearCallback !== undefined && currentColumnIndex >= 0) {
+                        clearCallback()
+                        fallbackCallback()
                     }
                     return newState
 
@@ -128,6 +132,9 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                             tetrisGrid: newGrid,
                             currentColumnIndex: currentColumnIndex + 1,
                         }
+                    } else if (clearCallback !== undefined && currentColumnIndex < 11) {
+                        clearCallback()
+                        fallbackCallback()
                     }
                     return newState
                 case 'down':
@@ -139,12 +146,16 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                             tetrisGrid: newGrid,
                             currentRowIndex: currentRowIndex + 1,
                         }
+                    } else {
+                        fallbackCallback()
                     }
                     return newState
 
                 default:
                     return state
             }
+        default:
+            return state
     }
 }
 
@@ -177,41 +188,54 @@ const moveRightIsPossible = (grid: CellInterface[][], rowIndex: number, columnIn
 }
 
 function App(): JSX.Element {
-    const [{ tetrisGrid, currentRowIndex, currentColumnIndex, nextShapeColor }, dispatch] = useReducer(reducer, initialState);
-    const [currentTimeout, setcurrentTimeout] = useState<null>(null)
+    const [{ tetrisGrid, nextShapeColor }, dispatch] = useReducer(reducer, initialState);
+    const [firstRenderHappened, setFirstRenderHappened] = useState(false)
+    const timerRef = useRef<number | null>(null);
 
-    const introduceShape = useCallback(() => { dispatch({ type: 'INTRODUCE_SHAPE' }) }, []);
-    const tryMoveShapeLeft = useCallback(() => { dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'left' } }) }, [])
-    const tryMoveShapeRight = useCallback(() => { dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'right' } }) }, [])
-    const tryMoveShapeDown = useCallback(() => {
-        if (moveDownIsPossible(tetrisGrid, currentRowIndex, currentColumnIndex)) {
-            dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'down' } })
-        } else {
-            introduceShape();
+    const clearCurrentTimeout = useCallback(() => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current)
+            console.log(`clearid after : ${timerRef.current}`);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentRowIndex, tetrisGrid, currentColumnIndex])
-
-
-    useEffect(() => {
-        if (currentTimeout === null) {
-            const timeout = setTimeout(() => {
-                tryMoveShapeDown()
-            }, 500);
-            setcurrentTimeout(currentTimeout)
-            return () => {
-                clearTimeout(timeout);
-            };
-        }
-    }, [currentTimeout, tryMoveShapeDown]);
-
-    useEffect(() => {
-        introduceShape();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const introduceShape = useCallback(() => {
+        dispatch({ type: 'INTRODUCE_SHAPE' })
+    }, []);
+
+    const tryMoveShapeDown = useCallback(() => {
+        dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'down', fallbackCallback: introduceShape } })
+    }, [introduceShape])
+
+    const orderNextMove = useCallback(() => {
+        timerRef.current = window.setTimeout(() => {
+            tryMoveShapeDown()
+        }, 500);
+    }, [tryMoveShapeDown])
+
+    const tryMoveShapeLeft = useCallback(() => {
+        dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'left', fallbackCallback: orderNextMove, clearCallback: clearCurrentTimeout } })
+    }, [clearCurrentTimeout, orderNextMove])
+
+    const tryMoveShapeRight = useCallback(() => {
+        dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'right', fallbackCallback: orderNextMove, clearCallback: clearCurrentTimeout } })
+    }, [clearCurrentTimeout, orderNextMove])
+
+    useEffect(() => {
+        if (firstRenderHappened) {
+            orderNextMove()
+        }
+    }, [tetrisGrid]);
+
+    useEffect(() => {
+        setFirstRenderHappened(true)
+        introduceShape();
+    }, [introduceShape]);
 
     const handleUserKeyPress = useCallback((event: { preventDefault: () => void; code: string; }) => {
         event.preventDefault();
+        clearCurrentTimeout()
+
         if (event.code === "ArrowLeft") {
             tryMoveShapeLeft();
         }
@@ -222,7 +246,7 @@ function App(): JSX.Element {
             tryMoveShapeDown();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [clearCurrentTimeout])
 
     useEffect(() => {
         document.addEventListener("keydown", handleUserKeyPress);
@@ -249,7 +273,7 @@ function App(): JSX.Element {
                         </div>
                     </section>
                     <section className="w-[100%] mt-[1rem]">
-                        <h3 className="w-[10.5rem] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Score</h3>
+                        <h3 className="w-[10.5rem] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">score</h3>
                         <div className="w-[100%] h-[2.625rem] text-[1.5rem] text-grey-txt flex items-center bg-greybg rounded-md text-white px-[10px]">125</div>
                     </section>
                 </section>
