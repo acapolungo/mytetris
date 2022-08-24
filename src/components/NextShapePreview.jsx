@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { bgGradientColor } from '../../utils/colors';
-
+// import { bgGradientColor } from '../utils/colors';
 
 const emptyNextShapeGrid = () => {
   const rowsOfCells = new Array(6).fill({ color: '', rounded: '' });
@@ -29,7 +28,7 @@ export default function NextShape({ nextShapeColor }) {
 
   return (
     <>{nextShapeGrid.flat().map((cell, index) => {
-      return <div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid ${bgGradientColor(cell.color)} ${cell.rounded}`}></div>
+      return <div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid`}></div>
     })}</>
   )
 }
