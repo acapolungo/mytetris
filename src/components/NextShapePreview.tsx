@@ -34,12 +34,14 @@ export default function NextShape({ nextShapeColor }: any) {
 
 
   return (
-    <>{nextShapeGrid.flat().map((cell, index) => {
-      if (cell.color) {
-        return (<div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid rounded-md ${bgGradientColor(nextShapeColor)}`}></div>)
-      } else {
-        return (<div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid`}></div>)
-      }
-    })}</>
-  )
+    <>
+      {nextShapeGrid.flat().map((cell, index) => {
+        return cell.color ? (
+          <div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid rounded-md ${bgGradientColor(nextShapeColor)}`}></div>
+        ) : (
+          <div key={index} className={`w-[1.75rem] h-[1.75rem] border-[0.05rem] border-bordergrid`}></div>
+        )
+      })}
+    </>
+  );
 }

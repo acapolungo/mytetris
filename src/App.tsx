@@ -99,6 +99,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                     return state
 
                 case 'right':
+
                     if (moveRightIsPossible(tetrisGridCopy(tetrisGrid), activeCellsCoordinates)) {
 
                         return {
@@ -112,8 +113,8 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                     return state
 
                 case 'down':
+                    if (moveDownIsPossible(tetrisGrid, activeCellsCoordinates) && activeCellsCoordinates.length !== 0) {
 
-                    if (moveDownIsPossible(tetrisGrid, activeCellsCoordinates)) {
                         return {
                             ...state,
                             tetrisGrid: tetrisGridMoveShapesDirection(tetrisGridCopy(tetrisGrid), referenceCellCoordinate, activeCell, direction),
@@ -199,7 +200,7 @@ const coordinatesOfCellsToActivate = (referenceCellCoordinate: Coordinate, curre
 
 const coordinateMovedByDirection = (coordinate: Coordinate, direction: Direction): Coordinate => {
 
-    const [rowIndex, columnIndex] = coordinate
+    let [rowIndex, columnIndex] = coordinate
 
     switch (direction) {
         case 'down':
@@ -222,6 +223,7 @@ const cellBelowIsFree = (grid: Grid, rowIndex: number, columnIndex: number): boo
     return grid[rowIndex + 1][columnIndex].isEmpty || grid[rowIndex + 1][columnIndex].isActive
 }
 const moveDownIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): boolean => {
+
     return activeCellsCoordinates.every((activeCellCoordinates) => {
         const [rowIndex, columnIndex] = activeCellCoordinates
         return (rowBelowExist(grid, rowIndex) && cellBelowIsFree(grid, rowIndex, columnIndex));
