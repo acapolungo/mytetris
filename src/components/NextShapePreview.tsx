@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react'
+import { Color, Grid } from '../types';
 import { bgGradientColor } from '../utils/colors';
 
-const emptyNextShapeGrid = () => {
+const emptyNextShapeGrid = (): Grid => {
   const rowsOfCells = new Array(6).fill({ isEmpty: true, isActive: false });
   return new Array(5).fill(rowsOfCells);
 }
 
-export default function NextShape({ nextShapeColor }: any) {
-
+export default function NextShape({ nextShapeColor }: { nextShapeColor: Color }) {
   const [nextShapeGrid, updateNextShapeGrid] = useState(emptyNextShapeGrid());
-
 
   useEffect(() => {
     updateNextShapeGrid(arr => {
@@ -25,13 +24,10 @@ export default function NextShape({ nextShapeColor }: any) {
 
       nextShapeGridCopy[1] = nextShapeFirstRowCopy
       nextShapeGridCopy[2] = nextShapeSecondRowCopy
-      arr = nextShapeGridCopy;
-
-      return arr;
+      return arr = nextShapeGridCopy;
     }
     );
   }, [nextShapeColor])
-
 
   return (
     <>

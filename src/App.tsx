@@ -17,7 +17,7 @@ function emptyGrid(): Grid {
 }
 
 function emptyNextShapeGrid(): Grid {
-    const rowsOfCells = new Array(6).fill({ color: '', rounded: '' });
+    const rowsOfCells = new Array(6).fill({ isEmpty: true, isActive: false });
     return new Array(5).fill(rowsOfCells);
 }
 
@@ -62,18 +62,17 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
     const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor } = state;
     const { type } = action;
-    const activeCellsCoordinates = findAllCoordinatesOfActiveCells(tetrisGridCopy(tetrisGrid))
+    const activeCellsCoordinates = findAllCoordinatesOfActiveCells(tetrisGrid)
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
 
     switch (type) {
         case 'INTRODUCE_SHAPE':
-
             const activeCurrentCell: CellType = { color: nextShapeColor, isActive: true, isEmpty: false }
-            const newplayableShape = tetrisgridIntroduceShape(tetrisGridWithActiveCellsDeactivated(tetrisGridCopy(tetrisGrid)), activeCurrentCell)
+
             return {
                 ...state,
                 currentShapeColor: nextShapeColor,
-                tetrisGrid: newplayableShape,
+                tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGridCopy(tetrisGrid)), activeCurrentCell),
                 nextShapeColor: randomColor(),
                 referenceCellCoordinate: [0, 5]
             }
@@ -86,12 +85,12 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
             switch (direction) {
                 case 'left':
-                    if (moveLeftIsPossible(tetrisGridCopy(tetrisGrid), activeCellsCoordinates)) {
+                    if (moveLeftIsPossible(tetrisGrid, activeCellsCoordinates)) {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridMoveShapesDirection(tetrisGridCopy(tetrisGrid), referenceCellCoordinate, activeCell, direction),
-                            referenceCellCoordinate: coordinateMovedByDirection(referenceCellCoordinate, direction)
+                            tetrisGrid: tetrisGridWithShapeMoved(tetrisGrid, referenceCellCoordinate, activeCell, direction),
+                            referenceCellCoordinate: movedCoordinate(referenceCellCoordinate, direction)
                         }
                     } else {
                         fallbackCallback()
@@ -100,12 +99,12 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
                 case 'right':
 
-                    if (moveRightIsPossible(tetrisGridCopy(tetrisGrid), activeCellsCoordinates)) {
+                    if (moveRightIsPossible(tetrisGrid, activeCellsCoordinates)) {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridMoveShapesDirection(tetrisGridCopy(tetrisGrid), referenceCellCoordinate, activeCell, direction),
-                            referenceCellCoordinate: coordinateMovedByDirection(referenceCellCoordinate, direction)
+                            tetrisGrid: tetrisGridWithShapeMoved(tetrisGrid, referenceCellCoordinate, activeCell, direction),
+                            referenceCellCoordinate: movedCoordinate(referenceCellCoordinate, direction)
                         }
                     } else {
                         fallbackCallback()
@@ -117,8 +116,8 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridMoveShapesDirection(tetrisGridCopy(tetrisGrid), referenceCellCoordinate, activeCell, direction),
-                            referenceCellCoordinate: coordinateMovedByDirection(referenceCellCoordinate, direction),
+                            tetrisGrid: tetrisGridWithShapeMoved(tetrisGrid, referenceCellCoordinate, activeCell, direction),
+                            referenceCellCoordinate: movedCoordinate(referenceCellCoordinate, direction),
                         }
                     } else {
                         fallbackCallback()
@@ -133,17 +132,17 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
     }
 }
 const tetrisGridWithoutShapeApplied = (tetrisGrid: Grid): Grid => {
-    const activeCellsCoordinates = findAllCoordinatesOfActiveCells(tetrisGrid)
-    const tetrisGridCopy = tetrisGrid.map(row => [...row])
+    const gridCopy = tetrisGridCopy(tetrisGrid)
+    const activeCellsCoordinates = findAllCoordinatesOfActiveCells(gridCopy)
     const emptyCell: CellType = { isEmpty: true, isActive: false }
 
     activeCellsCoordinates.forEach((coordinates) => {
         let [rowIndex, columnIndex] = coordinates
 
-        tetrisGridCopy[rowIndex][columnIndex] = emptyCell
+        gridCopy[rowIndex][columnIndex] = emptyCell
     })
 
-    return tetrisGridCopy
+    return gridCopy
 }
 
 const currentShapeVectors = (): Vector[] => {
@@ -155,7 +154,7 @@ const currentShapeVectors = (): Vector[] => {
     ]
 }
 
-const tetrisgridIntroduceShape = (tetrisGrid: Grid, activeCell: CellType) => {
+const tetrisGridWithIntroducedShape = (tetrisGrid: Grid, activeCell: CellType) => {
     const firstRow = [...tetrisGrid[0]];
     const secondRow = [...tetrisGrid[1]];
     firstRow[5] = activeCell
@@ -168,11 +167,12 @@ const tetrisgridIntroduceShape = (tetrisGrid: Grid, activeCell: CellType) => {
     return tetrisGrid
 }
 
-const tetrisGridMoveShapesDirection = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, activeCell: CellType, direction: Direction): Grid => {
+const tetrisGridWithShapeMoved = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, activeCell: CellType, direction: Direction): Grid => {
+    const gridCopy = tetrisGridCopy(tetrisGrid)
 
     return tetrisGridWithShapeApplied(
-        tetrisGridWithoutShapeApplied(tetrisGridCopy(tetrisGrid)),
-        coordinateMovedByDirection(referenceCellCoordinate, direction),
+        tetrisGridWithoutShapeApplied(gridCopy),
+        movedCoordinate(referenceCellCoordinate, direction),
         currentShapeVectors(),
         activeCell
     )
@@ -198,7 +198,7 @@ const coordinatesOfCellsToActivate = (referenceCellCoordinate: Coordinate, curre
     })
 }
 
-const coordinateMovedByDirection = (coordinate: Coordinate, direction: Direction): Coordinate => {
+const movedCoordinate = (coordinate: Coordinate, direction: Direction): Coordinate => {
 
     let [rowIndex, columnIndex] = coordinate
 
