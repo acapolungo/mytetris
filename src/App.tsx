@@ -45,15 +45,17 @@ const findAllCoordinatesOfActiveCells = (grid: Grid): Coordinate[] => {
 
 const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
 
-    tetrisGrid.forEach((row, rowIndex) => {
+    const gridCopy = tetrisGridCopy(tetrisGrid)
+
+    gridCopy.forEach((row, rowIndex) => {
         row.forEach((cell, columnIndex) => {
             if (cell.isActive) {
-                tetrisGrid[rowIndex][columnIndex].isActive = false
+                gridCopy[rowIndex][columnIndex].isActive = false
             }
         })
     })
 
-    return tetrisGrid
+    return gridCopy
 }
 
 const tetrisGridCopy = (tetrisGrid: Grid): Grid => tetrisGrid.map(row => [...row])
@@ -62,7 +64,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
     const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor } = state;
     const { type } = action;
-    const activeCellsCoordinates = findAllCoordinatesOfActiveCells(tetrisGrid)
+    const activeCellsCoordinates = coordinatesOfCellsToActivate(referenceCellCoordinate, currentShapeVectors())
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
 
     switch (type) {
@@ -72,7 +74,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
             return {
                 ...state,
                 currentShapeColor: nextShapeColor,
-                tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGridCopy(tetrisGrid)), activeCurrentCell),
+                tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGrid), activeCurrentCell),
                 nextShapeColor: randomColor(),
                 referenceCellCoordinate: [0, 5]
             }
@@ -112,7 +114,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                     return state
 
                 case 'down':
-                    if (moveDownIsPossible(tetrisGrid, activeCellsCoordinates) && activeCellsCoordinates.length !== 0) {
+                    if (moveDownIsPossible(tetrisGrid, activeCellsCoordinates)) {
 
                         return {
                             ...state,
