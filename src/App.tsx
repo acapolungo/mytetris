@@ -29,20 +29,6 @@ const initialState = {
     referenceCellCoordinate: [0, 5]
 }
 
-const findAllCoordinatesOfActiveCells = (grid: Grid): Coordinate[] => {
-    const coordinates: Coordinate[] = []
-
-    grid.forEach((row, rowIndex) => {
-        row.forEach((cell, columnIndex) => {
-            if (cell.isActive) {
-                const activeCellCoordinates: Coordinate = [rowIndex, columnIndex]
-                coordinates.push(activeCellCoordinates)
-            }
-        })
-    })
-    return coordinates
-}
-
 const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
 
     const gridCopy = tetrisGridCopy(tetrisGrid)
@@ -50,7 +36,7 @@ const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
     gridCopy.forEach((row, rowIndex) => {
         row.forEach((cell, columnIndex) => {
             if (cell.isActive) {
-                gridCopy[rowIndex][columnIndex].isActive = false
+                gridCopy[rowIndex][columnIndex] = { ...gridCopy[rowIndex][columnIndex], isActive: false }
             }
         })
     })
@@ -64,7 +50,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
     const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor } = state;
     const { type } = action;
-    const activeCellsCoordinates = coordinatesOfCellsToActivate(referenceCellCoordinate, currentShapeVectors())
+    const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, currentShapeVectors())
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
 
     switch (type) {
@@ -133,9 +119,10 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
             return state
     }
 }
-const tetrisGridWithoutShapeApplied = (tetrisGrid: Grid): Grid => {
+const tetrisGridWithoutShapeApplied = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate): Grid => {
+
     const gridCopy = tetrisGridCopy(tetrisGrid)
-    const activeCellsCoordinates = findAllCoordinatesOfActiveCells(gridCopy)
+    const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, currentShapeVectors())
     const emptyCell: CellType = { isEmpty: true, isActive: false }
 
     activeCellsCoordinates.forEach((coordinates) => {
@@ -173,16 +160,16 @@ const tetrisGridWithShapeMoved = (tetrisGrid: Grid, referenceCellCoordinate: Coo
     const gridCopy = tetrisGridCopy(tetrisGrid)
 
     return tetrisGridWithShapeApplied(
-        tetrisGridWithoutShapeApplied(gridCopy),
+        tetrisGridWithoutShapeApplied(gridCopy, referenceCellCoordinate),
         movedCoordinate(referenceCellCoordinate, direction),
         currentShapeVectors(),
         activeCell
     )
 }
 
-const tetrisGridWithShapeApplied = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, currentShapeVectors: Vector[], activeCell: CellType): Grid => {
+const tetrisGridWithShapeApplied = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, vectors: Vector[], activeCell: CellType): Grid => {
 
-    coordinatesOfCellsToActivate(referenceCellCoordinate, currentShapeVectors).forEach((coordinates) => {
+    cellCoordinates(referenceCellCoordinate, vectors).forEach((coordinates) => {
         let [rowIndex, columnIndex] = coordinates
 
         return tetrisGrid[rowIndex][columnIndex] = activeCell
@@ -190,7 +177,7 @@ const tetrisGridWithShapeApplied = (tetrisGrid: Grid, referenceCellCoordinate: C
     return tetrisGrid
 }
 
-const coordinatesOfCellsToActivate = (referenceCellCoordinate: Coordinate, currentShapeVectors: Vector[]): Coordinate[] => {
+const cellCoordinates = (referenceCellCoordinate: Coordinate, currentShapeVectors: Vector[]): Coordinate[] => {
 
     const [referenceCellRowIndex, referenceCellColumnIndex] = referenceCellCoordinate
 

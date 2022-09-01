@@ -7,7 +7,11 @@ const emptyNextShapeGrid = (): Grid => {
   return new Array(5).fill(rowsOfCells);
 }
 
-export default function NextShape({ nextShapeColor }: { nextShapeColor: Color }) {
+type PropType = {
+  nextShapeColor: Color;
+}
+
+export default function NextShape({ nextShapeColor }: PropType) {
   const [nextShapeGrid, updateNextShapeGrid] = useState(emptyNextShapeGrid());
 
   useEffect(() => {
