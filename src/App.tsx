@@ -43,53 +43,24 @@ const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
 
     return gridCopy;
 }
-const cleanSolidLines = (tetrisGrid: Grid, emptyCell: CellType): Grid => {
 
-    tetrisGrid.forEach((row, rowIndex) => {
-        if (row.every(cell => !cell.isEmpty)) {
-            return tetrisGrid[rowIndex].fill(emptyCell);
-        }
-    })
-    return tetrisGrid;
-}
-
-const tetrisGridCleanedOfMissingRows = (tetrisGrid: Grid): Grid => {
+const tetrisGridCleanedBeforeNewShape = (tetrisGrid: Grid): Grid => {
 
     const gridCopy = tetrisGridCopy(tetrisGrid)
     const emptyCell: CellType = { isEmpty: true, isActive: false }
-    const tetrisGridWithRemainingShapes = cleanSolidLines(gridCopy, emptyCell)
+    const isFull = (row: CellType[]): boolean => row.every((cell: CellType) => !cell.isEmpty)
+    const emptyRow = (): Grid => Array(12).fill({ ...emptyCell })
 
-    return tetrisGridWithFallenShapes(tetrisGridWithRemainingShapes)
+    const tetrisGridWithFullRowsRemoved = (tetrisGrid: Grid): Grid => {
+        const notFullRows = tetrisGrid.filter(row => !isFull(row))
+        const numberOfRowsToRestore = tetrisGrid.length - notFullRows.length
+        const rowsToRestore = Array(numberOfRowsToRestore).fill(emptyRow())
+
+        return [...rowsToRestore, ...notFullRows]
+    }
+
+    return tetrisGridWithFullRowsRemoved(gridCopy)
 };
-
-const tetrisGridWithFallenShapes = (tetrisGrid: Grid): Grid => {
-
-    const gridCopy = tetrisGridCopy(tetrisGrid)
-
-    const gridWithEmptyRows = (gridCopy: Grid): Grid => {
-        let emptyRows: Grid = []
-
-        gridCopy.forEach((row) => {
-            if (row.every(cell => cell.isEmpty)) {
-                return emptyRows.push(row)
-            }
-        })
-        return emptyRows
-    }
-
-    const gridWithSolidRows = (gridCopy: Grid): Grid => {
-        let fullRows: Grid = []
-
-        gridCopy.forEach((row) => {
-            if (row.some(cell => !cell.isEmpty)) {
-                return fullRows.push(row)
-            }
-        })
-        return fullRows
-    }
-
-    return [...gridWithEmptyRows(gridCopy), ...gridWithSolidRows(gridCopy)]
-}
 
 const tetrisGridCopy = (tetrisGrid: Grid): Grid => tetrisGrid.map(row => [...row])
 
@@ -159,7 +130,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridCleanedOfMissingRows(tetrisGrid),
+                            tetrisGrid: tetrisGridCleanedBeforeNewShape(tetrisGrid),
                         }
                     }
 
@@ -255,17 +226,6 @@ const movedCoordinate = (coordinate: Coordinate, direction: Direction): Coordina
     }
     return coordinate
 }
-
-// const moveDownOccupiedCellsIsFree = (grid: Grid, rowIndex: number, columnIndex: number): boolean | undefined => {
-//     return (grid[rowIndex + 1][columnIndex].isEmpty || !grid[rowIndex + 1][columnIndex].isActive)
-// }
-// const moveDownOccupiedCellsIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): boolean => {
-
-//     return activeCellsCoordinates.every((activeCellCoordinates) => {
-//         const [rowIndex] = activeCellCoordinates
-//         return (rowBelowExist(grid, rowIndex));
-//     })
-// }
 
 const rowBelowExist = (grid: Grid, rowIndex: number): boolean => {
     return Boolean(grid[rowIndex + 1]);
