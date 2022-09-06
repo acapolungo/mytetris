@@ -12,8 +12,9 @@ const randomColor = (): Color => {
 };
 
 function emptyGrid(): Grid {
-    const rowsOfCells = new Array(12).fill({ isEmpty: true, isActive: false });
-    return new Array(22).fill(rowsOfCells);
+    const emptyCell: CellType = { isEmpty: true, isActive: false }
+    const emptyRow = (): Grid => Array(12).fill({ ...emptyCell })
+    return new Array(22).fill(emptyRow());
 }
 
 function emptyNextShapeGrid(): Grid {
