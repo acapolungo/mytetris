@@ -336,6 +336,12 @@ function App(): JSX.Element {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    const restartClickButton = useCallback((event: { preventDefault: () => void }) => {
+        event.preventDefault();
+
+
+    }, [])
+
     useEffect(() => {
         document.addEventListener("keydown", handleUserKeyPress);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -352,7 +358,7 @@ function App(): JSX.Element {
                     <section className="w-[100%]">
                         <h3 className="w-[100%] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Next</h3>
                         <div className="w-[10.5rem] h-[8.75rem] bg-greybg rounded-md flex flex-wrap justify-center items-center content-center">
-                            <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-4">
+                            <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-4 rounded-md overflow-hidden">
                                 <NextShapePreview nextShapeColor={nextShapeColor} />
                             </section>
                         </div>
@@ -360,6 +366,9 @@ function App(): JSX.Element {
                     <section className="w-[100%] mt-[1rem]">
                         <h3 className="w-[10.5rem] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">score</h3>
                         <div className="w-[100%] h-[2.625rem] text-[1.5rem] text-grey-txt flex items-center bg-greybg rounded-md text-white px-[10px]">125</div>
+                    </section>
+                    <section className="w-[100%] mt-[1rem]">
+                        <button onClick={restartClickButton} className="bg-greybg hover:bg-gray-100 hover:text-gray-800 text-white font-semibold py-2 px-4 rounded-md shadow">Restart Game</button>
                     </section>
                 </section>
             </div>
