@@ -12,8 +12,9 @@ const randomColor = (): Color => {
 };
 
 function emptyGrid(): Grid {
-    const rowsOfCells = new Array(12).fill({ isEmpty: true, isActive: false });
-    return new Array(22).fill(rowsOfCells);
+    const emptyCell: CellType = { isEmpty: true, isActive: false }
+    const emptyRow = (): Grid => Array(12).fill({ ...emptyCell })
+    return new Array(22).fill(emptyRow());
 }
 
 function emptyNextShapeGrid(): Grid {
@@ -41,8 +42,26 @@ const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
         })
     })
 
-    return gridCopy
+    return gridCopy;
 }
+
+const tetrisGridCleanedBeforeNewShape = (tetrisGrid: Grid): Grid => {
+
+    const gridCopy = tetrisGridCopy(tetrisGrid)
+    const emptyCell: CellType = { isEmpty: true, isActive: false }
+    const isFull = (row: CellType[]): boolean => row.every((cell: CellType) => !cell.isEmpty)
+    const emptyRow = (): Grid => Array(12).fill({ ...emptyCell })
+
+    const tetrisGridWithFullRowsRemoved = (tetrisGrid: Grid): Grid => {
+        const notFullRows = tetrisGrid.filter(row => !isFull(row))
+        const numberOfRowsToRestore = tetrisGrid.length - notFullRows.length
+        const rowsToRestore = Array(numberOfRowsToRestore).fill(emptyRow())
+
+        return [...rowsToRestore, ...notFullRows]
+    }
+
+    return tetrisGridWithFullRowsRemoved(gridCopy)
+};
 
 const tetrisGridCopy = (tetrisGrid: Grid): Grid => tetrisGrid.map(row => [...row])
 
@@ -109,8 +128,12 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                         }
                     } else {
                         fallbackCallback()
+
+                        return {
+                            ...state,
+                            tetrisGrid: tetrisGridCleanedBeforeNewShape(tetrisGrid),
+                        }
                     }
-                    return state
 
                 default:
                     return state
@@ -230,7 +253,6 @@ const moveLeftIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): b
         return leftCellExist(grid, rowIndex, columnIndex) && leftCellIsFree(grid, rowIndex, columnIndex);
     })
 }
-
 const rightCellExist = (grid: Grid, rowIndex: number, columnIndex: number): boolean => {
     return grid[rowIndex][columnIndex + 1] !== undefined;
 }
@@ -296,6 +318,7 @@ function App(): JSX.Element {
         } else {
             orderNextMove()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tetrisGrid]);
 
     const handleUserKeyPress = useCallback((event: { preventDefault: () => void; code: string; }) => {
