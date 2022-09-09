@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useReducer, useState, useRef, Key } from 'react';
+import { useEffect, useCallback, useReducer, useRef, Key } from 'react';
 import './App.css';
 import Cell from './components/Cell';
 
@@ -15,20 +15,22 @@ function emptyGrid(): Grid {
     const emptyCell: CellType = { isEmpty: true, isActive: false }
     const emptyRow = (): Grid => Array(12).fill({ ...emptyCell })
     return new Array(22).fill(emptyRow());
-}
+};
 
 function emptyNextShapeGrid(): Grid {
     const rowsOfCells = new Array(6).fill({ isEmpty: true, isActive: false });
     return new Array(5).fill(rowsOfCells);
-}
+};
 
-const initialState = {
+const initialState: TetrisState = {
     tetrisGrid: emptyGrid(),
     currentShapeColor: randomColor(),
     nextShapeGrid: emptyNextShapeGrid(),
     nextShapeColor: randomColor(),
-    referenceCellCoordinate: [0, 5]
-}
+    referenceCellCoordinate: [0, 5],
+    status: 'In progress',
+    firstRenderHappened: false
+};
 
 const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
 
@@ -70,19 +72,33 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
     const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor } = state;
     const { type } = action;
     const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, currentShapeVectors())
+    const introduceShapeCellsCoordinates = cellCoordinates(initialState.referenceCellCoordinate, currentShapeVectors())
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
 
     switch (type) {
-        case 'INTRODUCE_SHAPE':
+        case 'TRY_INTRODUCE_SHAPE':
             const activeCurrentCell: CellType = { color: nextShapeColor, isActive: true, isEmpty: false }
 
-            return {
-                ...state,
-                currentShapeColor: nextShapeColor,
-                tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGrid), activeCurrentCell),
-                nextShapeColor: randomColor(),
-                referenceCellCoordinate: [0, 5]
+            if (firstShapeCanBeIntroduced(tetrisGrid, introduceShapeCellsCoordinates)) {
+                return {
+                    ...state,
+                    currentShapeColor: nextShapeColor,
+                    tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGrid), activeCurrentCell),
+                    nextShapeColor: randomColor(),
+                    referenceCellCoordinate: initialState.referenceCellCoordinate,
+                    status: 'In progress',
+                    firstRenderHappened: true
+                }
+            } else {
+
+                return {
+                    ...state,
+                    tetrisGrid: tetrisGrid,
+                    status: 'Game over',
+                }
             }
+        case 'RESET':
+            return initialState
         case 'TRY_MOVE_SHAPE':
             const { direction, source, clearCurrentTimeout, fallbackCallback } = action.payload;
 
@@ -241,6 +257,18 @@ const moveDownIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): b
         return (rowBelowExist(grid, rowIndex) && cellBelowIsFree(grid, rowIndex, columnIndex));
     })
 }
+
+const cellIsEmpty = (grid: Grid, rowIndex: number, columnIndex: number): boolean | undefined => {
+    return grid[rowIndex][columnIndex].isEmpty
+}
+const firstShapeCanBeIntroduced = (grid: Grid, referenceCellsCoordinates: Coordinate[]): boolean => {
+
+    return referenceCellsCoordinates.every((referenceCellCoordinates) => {
+        const [rowIndex, columnIndex] = referenceCellCoordinates
+        return cellIsEmpty(grid, rowIndex, columnIndex);
+    })
+}
+
 const leftCellExist = (grid: Grid, rowIndex: number, columnIndex: number): boolean => {
     return Boolean(grid[rowIndex][columnIndex - 1] !== undefined);
 }
@@ -267,9 +295,9 @@ const moveRightIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): 
 }
 
 function App(): JSX.Element {
-    const [{ tetrisGrid, nextShapeColor }, dispatch] = useReducer(reducer, initialState);
-    const [firstRenderHappened, setFirstRenderHappened] = useState(false)
+    const [{ tetrisGrid, nextShapeColor, firstRenderHappened, status }, dispatch] = useReducer(reducer, initialState);
     const currentTimeoutIdRef = useRef<number | null>(null);
+    const gameIsOver = status === 'Game over'
 
     const clearCurrentTimeout = useCallback(() => {
         if (currentTimeoutIdRef.current) {
@@ -279,7 +307,11 @@ function App(): JSX.Element {
     }, []);
 
     const introduceShape = useCallback(() => {
-        dispatch({ type: 'INTRODUCE_SHAPE' })
+        dispatch({ type: 'TRY_INTRODUCE_SHAPE' })
+    }, []);
+
+    const resetGame = useCallback(() => {
+        dispatch({ type: 'RESET' })
     }, []);
 
     const tryMoveShapeDown = useCallback((source: Source) => {
@@ -311,15 +343,27 @@ function App(): JSX.Element {
         dispatch({ type: 'TRY_MOVE_SHAPE', payload: { direction: 'right', fallbackCallback: orderNextMove, source: 'player', clearCurrentTimeout: clearCurrentTimeout } })
     }, [clearCurrentTimeout, orderNextMove])
 
+    const executeIntroduceShapeJustOnce = (() => {
+        let executed = false;
+        return () => {
+            if (!executed) {
+                executed = true;
+                introduceShape();
+            }
+        };
+    })();
+
     useEffect(() => {
         if (!firstRenderHappened) {
-            introduceShape();
-            setFirstRenderHappened(true)
+            executeIntroduceShapeJustOnce()
         } else {
             orderNextMove()
         }
+        if (gameIsOver) {
+            clearCurrentTimeout()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tetrisGrid]);
+    }, [firstRenderHappened, tetrisGrid]);
 
     const handleUserKeyPress = useCallback((event: { preventDefault: () => void; code: string; }) => {
         event.preventDefault();
@@ -339,19 +383,31 @@ function App(): JSX.Element {
     const restartClickButton = useCallback((event: { preventDefault: () => void }) => {
         event.preventDefault();
 
+        resetGame()
+        clearCurrentTimeout()
 
-    }, [])
+    }, [clearCurrentTimeout, resetGame])
 
     useEffect(() => {
         document.addEventListener("keydown", handleUserKeyPress);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        if (gameIsOver) {
+            document.removeEventListener("keydown", handleUserKeyPress);
+        }
+    }, [gameIsOver, handleUserKeyPress]);
 
     return (
         <div className="mx-auto h-screen flex justify-center items-center bg-gradient-to-br from-purplebg to-cyanbg">
-            <div className="w-[37rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
-                <section className="w-[21rem] h-[100%] bg-greybg grid grid-cols-12 grid-rows-22">
-                    {tetrisGrid.flat().map((cell: CellType, index: Key | null | undefined) => <Cell key={index} {...cell} />)}
+            <div className="relative w-[37rem] h-[42rem] p-[1.75rem] bg-gradient-to-br from-magenta via-purple to-cyan flex justify-between drop-shadow-xl">
+                <section className="relative w-[21rem] h-[100%] bg-greybg grid grid-cols-12 grid-rows-22">
+                    {gameIsOver ?
+                        <>
+                            <h2 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[2.5rem] text-white bg-gradient-to-b from-purple-0 to-pink-600 px-5 rounded-md shadow-white z-10">game<span className="font-bold">Over</span></h2>
+                            <div className="w-[21rem] h-[100%] bg-greybg grid grid-cols-12 opacity-30">
+                                {tetrisGrid.flat().map((cell: CellType, index: Key | null | undefined) => <Cell key={index} {...cell} status={status} />)}
+                            </div>
+                        </>
+                        : tetrisGrid.flat().map((cell: CellType, index: Key | null | undefined) => <Cell key={index} {...cell} status={status} />)
+                    }
                 </section>
                 <section className="w-[10.5rem] h-[100%] rounded-sm flexflex-wrap">
                     <h1 className="text-[2.5rem] h-[12%] text-cyan">my<span className="font-bold">Tetris</span></h1>
@@ -359,7 +415,12 @@ function App(): JSX.Element {
                         <h3 className="w-[100%] text-[1.5rem] text-white shadow-lg drop-shadow-md-black">Next</h3>
                         <div className="w-[10.5rem] h-[8.75rem] bg-greybg rounded-md flex flex-wrap justify-center items-center content-center">
                             <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-4 rounded-md overflow-hidden">
-                                <NextShapePreview nextShapeColor={nextShapeColor} />
+                                {gameIsOver ?
+                                    <div className="w-[10.5rem] h-[100%] bg-greybg grid grid-cols-6 rounded-md opacity-30">
+                                        <NextShapePreview nextShapeColor={'grey'} />
+                                    </div>
+                                    : <NextShapePreview nextShapeColor={nextShapeColor} />
+                                }
                             </section>
                         </div>
                     </section>
@@ -368,7 +429,11 @@ function App(): JSX.Element {
                         <div className="w-[100%] h-[2.625rem] text-[1.5rem] text-grey-txt flex items-center bg-greybg rounded-md text-white px-[10px]">125</div>
                     </section>
                     <section className="w-[100%] mt-[1rem]">
-                        <button onClick={restartClickButton} className="bg-greybg hover:bg-gray-100 hover:text-gray-800 text-white font-semibold py-2 px-4 rounded-md shadow">Restart Game</button>
+                        {gameIsOver ?
+                            <button onClick={restartClickButton} className="bg-greybg hover:bg-gray-100 hover:text-gray-800 text-white font-semibold py-2 px-4 rounded-md shadow">Restart Game</button>
+                            : ''
+                        }
+
                     </section>
                 </section>
             </div>

@@ -16,6 +16,9 @@ export function bgGradientColor(color) {
         case 'red':
             className = 'bg-gradient-red'
             break;
+        case 'grey':
+            className = 'bg-gradient-grey'
+            break;
 
         default:
             break;

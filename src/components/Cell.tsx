@@ -4,6 +4,7 @@ import EmptyCell from './EmptyCell'
 import OccupiedCell from './OccupiedCell';
 
 export default function Cell(cell: CellType) {
+
   const isOccupied = 'color' in cell
   return (
     <>
