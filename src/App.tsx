@@ -77,6 +77,8 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
 
     switch (type) {
         case 'TRY_INTRODUCE_SHAPE':
+
+            const { clearTimeoutIntroduceShape } = action.payload
             const activeCurrentCell: CellType = { color: nextShapeColor, isActive: true, isEmpty: false }
 
             if (firstShapeCanBeIntroduced(tetrisGrid, introduceShapeCellsCoordinates)) {
@@ -90,7 +92,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                     firstRenderHappened: true
                 }
             } else {
-
+                clearTimeoutIntroduceShape()
                 return {
                     ...state,
                     tetrisGrid: tetrisGrid,
@@ -258,8 +260,8 @@ const moveDownIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): b
     })
 }
 
-const cellIsEmpty = (grid: Grid, rowIndex: number, columnIndex: number): boolean | undefined => {
-    return grid[rowIndex][columnIndex].isEmpty
+const cellIsEmpty = (grid: Grid, rowIndex: number, columnIndex: number): boolean => {
+    return Boolean(grid[rowIndex][columnIndex].isEmpty)
 }
 const firstShapeCanBeIntroduced = (grid: Grid, referenceCellsCoordinates: Coordinate[]): boolean => {
 
@@ -297,7 +299,7 @@ const moveRightIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): 
 function App(): JSX.Element {
     const [{ tetrisGrid, nextShapeColor, firstRenderHappened, status }, dispatch] = useReducer(reducer, initialState);
     const currentTimeoutIdRef = useRef<number | null>(null);
-    const gameIsOver = status === 'Game over'
+    const gameIsOver = status === 'Game over';
 
     const clearCurrentTimeout = useCallback(() => {
         if (currentTimeoutIdRef.current) {
@@ -307,8 +309,11 @@ function App(): JSX.Element {
     }, []);
 
     const introduceShape = useCallback(() => {
-        dispatch({ type: 'TRY_INTRODUCE_SHAPE' })
-    }, []);
+        dispatch({
+            type: 'TRY_INTRODUCE_SHAPE',
+            payload: { clearTimeoutIntroduceShape: clearCurrentTimeout }
+        })
+    }, [clearCurrentTimeout]);
 
     const resetGame = useCallback(() => {
         dispatch({ type: 'RESET' })
@@ -356,14 +361,14 @@ function App(): JSX.Element {
     useEffect(() => {
         if (!firstRenderHappened) {
             executeIntroduceShapeJustOnce()
+        }
+        else if (gameIsOver) {
+            clearCurrentTimeout()
         } else {
             orderNextMove()
         }
-        if (gameIsOver) {
-            clearCurrentTimeout()
-        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [firstRenderHappened, tetrisGrid]);
+    }, [tetrisGrid]);
 
     const handleUserKeyPress = useCallback((event: { preventDefault: () => void; code: string; }) => {
         event.preventDefault();
@@ -380,20 +385,20 @@ function App(): JSX.Element {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const restartClickButton = useCallback((event: { preventDefault: () => void }) => {
+    const handleGameRestart = useCallback((event: { preventDefault: () => void }) => {
         event.preventDefault();
-
         resetGame()
-        clearCurrentTimeout()
 
-    }, [clearCurrentTimeout, resetGame])
+    }, [resetGame])
 
     useEffect(() => {
-        document.addEventListener("keydown", handleUserKeyPress);
         if (gameIsOver) {
             document.removeEventListener("keydown", handleUserKeyPress);
+        } else {
+            document.addEventListener("keydown", handleUserKeyPress);
         }
-    }, [gameIsOver, handleUserKeyPress]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameIsOver]);
 
     return (
         <div className="mx-auto h-screen flex justify-center items-center bg-gradient-to-br from-purplebg to-cyanbg">
@@ -430,7 +435,7 @@ function App(): JSX.Element {
                     </section>
                     <section className="w-[100%] mt-[1rem]">
                         {gameIsOver ?
-                            <button onClick={restartClickButton} className="bg-greybg hover:bg-gray-100 hover:text-gray-800 text-white font-semibold py-2 px-4 rounded-md shadow">Restart Game</button>
+                            <button onClick={handleGameRestart} className="bg-greybg hover:bg-gray-100 hover:text-gray-800 text-white font-semibold py-2 px-4 rounded-md shadow">Restart Game</button>
                             : ''
                         }
 

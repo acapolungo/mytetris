@@ -10,8 +10,16 @@ module.exports = {
       xl: '1440px',
     },
     extend: {
+      animation: {
+        'blink': 'blinker 1s linear infinite',
+      },
+      keyframes: {
+        blinker: {
+          '50%': { opacity: 0 }
+        }
+      },
       colors: {
-        // Configure your color palette here
+        // Configure color palette here
         'magenta': '#ec4899',
         'cyan': '#37E5DB',
         'purple': '#9C58EF',
