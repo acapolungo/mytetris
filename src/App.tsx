@@ -3,7 +3,7 @@ import './App.css';
 import Cell from './components/Cell';
 
 import NextShapePreview from './components/NextShapePreview';
-import { CellType, Color, TetrisState, ShapeAction, Source, Coordinate, Vector, Grid, Direction } from './types';
+import { CellType, Color, TetrisState, Action, Source, Coordinate, Vector, Grid, Direction } from './types';
 
 const randomColor = (): Color => {
     const arrayOfColors: Color[] = ["yellow", "orange", "purple", "blue", "red"];
@@ -67,14 +67,14 @@ const tetrisGridCleanedBeforeNewShape = (tetrisGrid: Grid): Grid => {
 
 const tetrisGridCopy = (tetrisGrid: Grid): Grid => tetrisGrid.map(row => [...row])
 
-const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
+const reducer = (state: TetrisState, action: Action): TetrisState => {
 
     const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor } = state;
     const { type } = action;
     const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, currentShapeVectors())
     const introduceShapeCellsCoordinates = cellCoordinates(initialState.referenceCellCoordinate, currentShapeVectors())
-    const { clearCurrentTimeout } = action.payload
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
+    const { clearCurrentTimeout } = action.payload
 
     switch (type) {
         case 'TRY_INTRODUCE_SHAPE':
@@ -91,8 +91,11 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                     status: 'In progress',
                     firstRenderHappened: true
                 }
-            } else {
-                clearCurrentTimeout()
+            } else { 
+                if (clearCurrentTimeout) {
+                    clearCurrentTimeout()
+                }
+
                 return {
                     ...state,
                     tetrisGrid: tetrisGrid,
@@ -105,7 +108,10 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
             const { direction, source, fallbackCallback } = action.payload;
 
             if (source === 'player') {
-                clearCurrentTimeout()
+                if (clearCurrentTimeout) {
+                    clearCurrentTimeout()
+                }
+                
             }
 
             switch (direction) {
@@ -119,8 +125,9 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                         }
                     } else {
                         fallbackCallback()
+                        return state
                     }
-                    return state
+                    
 
                 case 'right':
 
@@ -133,8 +140,9 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                         }
                     } else {
                         fallbackCallback()
+                        return state
                     }
-                    return state
+                    
 
                 case 'down':
                     if (moveDownIsPossible(tetrisGrid, activeCellsCoordinates)) {
@@ -316,8 +324,8 @@ function App(): JSX.Element {
     }, [clearCurrentTimeout]);
 
     const resetGame = useCallback(() => {
-        dispatch({ type: 'RESET', payload: { clearCurrentTimeout: clearCurrentTimeout } })
-    }, [clearCurrentTimeout]);
+        dispatch({ type: 'RESET', payload: {} })
+    }, []);
 
     const tryMoveShapeDown = useCallback((source: Source) => {
         dispatch(
