@@ -73,12 +73,12 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
     const { type } = action;
     const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, currentShapeVectors())
     const introduceShapeCellsCoordinates = cellCoordinates(initialState.referenceCellCoordinate, currentShapeVectors())
+    const { clearCurrentTimeout } = action.payload
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
 
     switch (type) {
         case 'TRY_INTRODUCE_SHAPE':
 
-            const { clearTimeoutIntroduceShape } = action.payload
             const activeCurrentCell: CellType = { color: nextShapeColor, isActive: true, isEmpty: false }
 
             if (firstShapeCanBeIntroduced(tetrisGrid, introduceShapeCellsCoordinates)) {
@@ -92,7 +92,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
                     firstRenderHappened: true
                 }
             } else {
-                clearTimeoutIntroduceShape()
+                clearCurrentTimeout()
                 return {
                     ...state,
                     tetrisGrid: tetrisGrid,
@@ -102,7 +102,7 @@ const reducer = (state: TetrisState, action: ShapeAction): TetrisState => {
         case 'RESET':
             return initialState
         case 'TRY_MOVE_SHAPE':
-            const { direction, source, clearCurrentTimeout, fallbackCallback } = action.payload;
+            const { direction, source, fallbackCallback } = action.payload;
 
             if (source === 'player') {
                 clearCurrentTimeout()
@@ -311,13 +311,13 @@ function App(): JSX.Element {
     const introduceShape = useCallback(() => {
         dispatch({
             type: 'TRY_INTRODUCE_SHAPE',
-            payload: { clearTimeoutIntroduceShape: clearCurrentTimeout }
+            payload: { clearCurrentTimeout: clearCurrentTimeout }
         })
     }, [clearCurrentTimeout]);
 
     const resetGame = useCallback(() => {
-        dispatch({ type: 'RESET' })
-    }, []);
+        dispatch({ type: 'RESET', payload: { clearCurrentTimeout: clearCurrentTimeout } })
+    }, [clearCurrentTimeout]);
 
     const tryMoveShapeDown = useCallback((source: Source) => {
         dispatch(

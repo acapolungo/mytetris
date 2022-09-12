@@ -8,11 +8,11 @@ export type Status = "In progress" | "Idle" | "Finished" | "Game over";
 export type Coordinate = number[];
 export type Vector = [number, number];
 export type ShapeAction = {
-    type: "TRY_INTRODUCE_SHAPE"; payload: { clearTimeoutIntroduceShape: Function }
+    type: "TRY_INTRODUCE_SHAPE"; payload: { clearCurrentTimeout: Function }
 } | {
     type: 'TRY_MOVE_SHAPE';
     payload: { direction: Direction, fallbackCallback: Function, source: Source, clearCurrentTimeout: Function }
-} | { type: "RESET" } | { type: 'STATUS'; payload: { status: Status } }
+} | { type: "RESET"; payload: { clearCurrentTimeout: Function } } | { type: 'STATUS'; payload: { status: Status; clearCurrentTimeout: Function } }
 export type TetrisState = {
     tetrisGrid: CellType[][];
     currentShapeColor: Color;
