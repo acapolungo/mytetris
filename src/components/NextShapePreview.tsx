@@ -11,7 +11,7 @@ const landmark = (shape: Shape): Coordinate => {
   switch (shape) {
     case 'o':
       return [2, 2]
-    case 'i':
+    case 'i':  
       return [1, 2]
     default:
       return [0, 0]

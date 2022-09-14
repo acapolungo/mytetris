@@ -13,7 +13,7 @@ export type Vector = [number, number];
 export type Action =
     | { type: "TRY_INTRODUCE_SHAPE"; payload: { clearCurrentTimeout: Function } }
     | { type: 'TRY_MOVE_SHAPE'; payload: { direction: Direction; fallbackCallback: Function; source: Source; clearCurrentTimeout: Function; } }
-    | { type: 'TRY_ROTATE'; payload: { position: Position; fallbackCallback: Function; source: Source; clearCurrentTimeout: Function; } }
+    | { type: 'TRY_ROTATE_SHAPE'; payload: { fallbackCallbackRotate: Function; source: Source; clearCurrentTimeout: Function; } }
     | { type: "RESET"; payload: { clearCurrentTimeout?: Function; } }
 export type TetrisState = {
     tetrisGrid: CellType[][];
@@ -25,5 +25,6 @@ export type TetrisState = {
     firstRenderHappened: Boolean;
     currentShape: Shape;
     nextShape: Shape;
+    shapeVector: Vector[];
     position: Position;
 }
