@@ -3,7 +3,7 @@ import './App.css';
 import Cell from './components/Cell';
 
 import NextShapePreview from './components/NextShapePreview';
-import { CellType, Color, TetrisState, Action, Source, Coordinate, Vector, Grid, Direction, Shape, Position } from './types';
+import { CellType, Color, TetrisState, Action, Source, Coordinate, Vector, Grid, Direction, shapeType, Position } from './types';
 
 const randomColor = (): Color => {
     const arrayOfColors: Color[] = ["yellow", "orange", "purple", "blue", "red"];
@@ -11,11 +11,9 @@ const randomColor = (): Color => {
     return color
 };
 
-// const arrayOfShapes: Color[] = ["i", "j", "l", "o", "s", "t", "z"];
-const randomShapes = (): Shape => {
-    const arrayOfShapes: Shape[] = ["o", "i"];
-    const shape = arrayOfShapes[Math.floor(Math.random() * arrayOfShapes.length)]
-    return shape
+const randomShape = (): shapeType => {
+    const arrayOfShapes: shapeType[] = ["o", "i"];
+    return arrayOfShapes[Math.floor(Math.random() * arrayOfShapes.length)]
 };
 
 function emptyGrid(): Grid {
@@ -37,9 +35,9 @@ const initialState: TetrisState = {
     referenceCellCoordinate: [0, 5],
     status: 'In progress',
     firstRenderHappened: false,
-    currentShape: randomShapes(),
-    nextShape: randomShapes(),
-    shapeVector: [],
+    currentShape: randomShape(),
+    nextShape: randomShape(),
+    currentShapeVectors: [],
     position: 1
 };
 
@@ -80,7 +78,7 @@ const tetrisGridCopy = (tetrisGrid: Grid): Grid => tetrisGrid.map(row => [...row
 
 const reducer = (state: TetrisState, action: Action): TetrisState => {
 
-    const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor, currentShape, nextShape, shapeVector, position } = state;
+    const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor, currentShape, nextShape, currentShapeVectors, position } = state;
     const { type } = action;
     const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, shapesVectors(currentShape, position))
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
@@ -90,20 +88,20 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
         case 'TRY_INTRODUCE_SHAPE':
 
             const activeCurrentCell: CellType = { color: nextShapeColor, isActive: true, isEmpty: false }
-            const introduceShapeCellsCoordinates = cellCoordinates(initialState.referenceCellCoordinate, shapesVectors(nextShape, 1))
+            const coordinatesIntroducedShape = cellCoordinates(initialState.referenceCellCoordinate, shapesVectors(nextShape, 1))
 
-            if (shapeCanBeIntroduced(tetrisGrid, introduceShapeCellsCoordinates)) {
+            if (shapeCanBeIntroduced(tetrisGrid, coordinatesIntroducedShape)) {
                 return {
                     ...state,
                     currentShapeColor: nextShapeColor,
-                    tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGrid), introduceShapeCellsCoordinates, activeCurrentCell),
+                    tetrisGrid: tetrisGridWithIntroducedShape(tetrisGridWithActiveCellsDeactivated(tetrisGrid), coordinatesIntroducedShape, activeCurrentCell),
                     nextShapeColor: randomColor(),
                     referenceCellCoordinate: initialState.referenceCellCoordinate,
                     status: 'In progress',
                     firstRenderHappened: true,
                     currentShape: nextShape,
-                    nextShape: randomShapes(),
-                    shapeVector: shapesVectors(nextShape, 1),
+                    nextShape: randomShape(),
+                    currentShapeVectors: shapesVectors(nextShape, 1),
                     position: 1
                 }
             } else {
@@ -118,6 +116,7 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
             }
         case 'RESET':
             return initialState
+
         case 'TRY_MOVE_SHAPE':
             const { direction, source, fallbackCallback } = action.payload;
 
@@ -134,7 +133,7 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridWithShapeMoved(tetrisGrid, referenceCellCoordinate, activeCell, direction, shapeVector),
+                            tetrisGrid: tetrisGridAfterShapeRotation(tetrisGrid, referenceCellCoordinate, activeCell, direction, currentShapeVectors),
                             referenceCellCoordinate: movedCoordinate(referenceCellCoordinate, direction)
                         }
                     } else {
@@ -148,7 +147,7 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridWithShapeMoved(tetrisGrid, referenceCellCoordinate, activeCell, direction, shapeVector),
+                            tetrisGrid: tetrisGridAfterShapeRotation(tetrisGrid, referenceCellCoordinate, activeCell, direction, currentShapeVectors),
                             referenceCellCoordinate: movedCoordinate(referenceCellCoordinate, direction)
                         }
                     } else {
@@ -161,7 +160,7 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
 
                         return {
                             ...state,
-                            tetrisGrid: tetrisGridWithShapeMoved(tetrisGrid, referenceCellCoordinate, activeCell, direction, shapeVector),
+                            tetrisGrid: tetrisGridAfterShapeRotation(tetrisGrid, referenceCellCoordinate, activeCell, direction, currentShapeVectors),
                             referenceCellCoordinate: movedCoordinate(referenceCellCoordinate, direction)
                         }
                     } else {
@@ -178,9 +177,9 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
             }
 
         case 'TRY_ROTATE_SHAPE':
+            const { fallbackCallbackRotate } = action.payload;
             let newPosition;
-            newPosition = position
-            newPosition++
+            newPosition = position + 1
 
             const rotateShapeCoordinate = cellCoordinates(referenceCellCoordinate, shapesVectors(currentShape, newPosition as Position))
 
@@ -194,12 +193,12 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
                 }
                 return {
                     ...state,
-                    tetrisGrid: tetrisGridWithShapeRotated(tetrisGrid, referenceCellCoordinate, activeCell, shapeVector, shapesVectors(currentShape, newPosition as Position)),
-                    shapeVector: shapesVectors(currentShape, newPosition as Position),
+                    tetrisGrid: tetrisGridWithShapeRotated(tetrisGrid, referenceCellCoordinate, activeCell, currentShapeVectors, shapesVectors(currentShape, newPosition as Position)),
+                    currentShapeVectors: shapesVectors(currentShape, newPosition as Position),
                     position: newPosition as Position,
                 }
             } else {
-                // fallbackCallback()
+                fallbackCallbackRotate()
                 return state
             }
 
@@ -223,7 +222,7 @@ const tetrisGridWithoutShapeApplied = (tetrisGrid: Grid, referenceCellCoordinate
     return gridCopy
 }
 
-const shapesVectors = (shape: Shape, position: Position): Vector[] => {
+const shapesVectors = (shape: shapeType, position: Position): Vector[] => {
     if (shape === 'o') {
         switch (position) {
             case 1:
@@ -268,7 +267,7 @@ const tetrisGridWithIntroducedShape = (tetrisGrid: Grid, activeCellsCoordinates:
     return gridCopy
 }
 
-const tetrisGridWithShapeMoved = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, activeCell: CellType, direction: Direction, shape: Vector[]): Grid => {
+const tetrisGridAfterShapeRotation = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, activeCell: CellType, direction: Direction, shape: Vector[]): Grid => {
     const gridCopy = tetrisGridCopy(tetrisGrid)
 
     return tetrisGridWithShapeApplied(
@@ -279,13 +278,13 @@ const tetrisGridWithShapeMoved = (tetrisGrid: Grid, referenceCellCoordinate: Coo
     )
 }
 
-const tetrisGridWithShapeRotated = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, activeCell: CellType, shape: Vector[], newShape: Vector[]): Grid => {
+const tetrisGridWithShapeRotated = (tetrisGrid: Grid, referenceCellCoordinate: Coordinate, activeCell: CellType, shape: Vector[], rotatedShapeVectors: Vector[]): Grid => {
     const gridCopy = tetrisGridCopy(tetrisGrid)
 
     return tetrisGridWithShapeApplied(
         tetrisGridWithoutShapeApplied(gridCopy, referenceCellCoordinate, shape),
         referenceCellCoordinate,
-        newShape,
+        rotatedShapeVectors,
         activeCell
     )
 }
@@ -342,14 +341,17 @@ const moveDownIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): b
     })
 }
 
-const cellIsEmpty = (grid: Grid, rowIndex: number, columnIndex: number): boolean => {
-    return Boolean(grid[rowIndex][columnIndex].isEmpty)
+const cellsAreEmpty = (grid: Grid, rowIndex: number, columnIndex: number): boolean | undefined => {
+    return grid[rowIndex][columnIndex].isEmpty;
+}
+const cellsExist = (grid: Grid, rowIndex: number, columnIndex: number): boolean => {
+    return Boolean(grid[rowIndex][columnIndex] !== undefined)
 }
 const shapeCanBeIntroduced = (grid: Grid, referenceCellsCoordinates: Coordinate[]): boolean => {
 
     return referenceCellsCoordinates.every((referenceCellCoordinates) => {
         const [rowIndex, columnIndex] = referenceCellCoordinates
-        return cellIsEmpty(grid, rowIndex, columnIndex);
+        return cellsAreEmpty(grid, rowIndex, columnIndex);
     })
 }
 
@@ -357,7 +359,7 @@ const shapeCanBeRotated = (grid: Grid, referenceCellsCoordinates: Coordinate[]):
     referenceCellsCoordinates.shift()
     return referenceCellsCoordinates.every((referenceCellCoordinates) => {
         const [rowIndex, columnIndex] = referenceCellCoordinates
-        return cellIsEmpty(grid, rowIndex, columnIndex);
+        return cellsExist(grid, rowIndex, columnIndex) && cellsAreEmpty(grid, rowIndex, columnIndex);
     })
 }
 
@@ -374,7 +376,7 @@ const moveLeftIsPossible = (grid: Grid, activeCellsCoordinates: Coordinate[]): b
     })
 }
 const rightCellExist = (grid: Grid, rowIndex: number, columnIndex: number): boolean => {
-    return grid[rowIndex][columnIndex + 1] !== undefined;
+    return Boolean(grid[rowIndex][columnIndex + 1] !== undefined);
 }
 const rightCellIsFree = (grid: Grid, rowIndex: number, columnIndex: number): boolean | undefined => {
     return grid[rowIndex][columnIndex + 1].isEmpty || grid[rowIndex][columnIndex + 1].isActive;

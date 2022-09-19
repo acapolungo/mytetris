@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Color, Coordinate, Grid, Shape, Vector, CellType } from '../types';
+import { Color, Coordinate, Grid, shapeType, Vector, CellType } from '../types';
 import { bgGradientColor } from '../utils/colors';
 
 const emptyNextShapeGrid = (): Grid => {
@@ -7,11 +7,11 @@ const emptyNextShapeGrid = (): Grid => {
   return new Array(6).fill(rowsOfCells);
 }
 
-const landmark = (shape: Shape): Coordinate => {
+const landmark = (shape: shapeType): Coordinate => {
   switch (shape) {
     case 'o':
       return [2, 2]
-    case 'i':  
+    case 'i':
       return [1, 2]
     default:
       return [0, 0]
@@ -42,7 +42,7 @@ const nextShapeGridWithIntroducedShape = (nextShapeGrid: Grid, nextShapeCellsCoo
 
 type PropType = {
   nextShapeColor: Color;
-  nextShape: Shape;
+  nextShape: shapeType;
   nextShapeVectors: Vector[]
 }
 
