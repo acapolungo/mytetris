@@ -2,11 +2,16 @@
 export type CellType = { color?: Color; isActive?: boolean; isEmpty: boolean; status?: Status };
 export type Grid = CellType[][];
 export type Color = "yellow" | "orange" | "purple" | "blue" | "red" | "grey";
-export type shapeType = "i" | "o";
+// export type shapeType = "i" | "o";
+export type shapeName = "i" | "o";
+export type shapeType = {
+    currentLetter: shapeName;
+    currentPositionIndex: number;
+    currentShapeVectors: Vector[];
+}
 export type Direction = "down" | "left" | "right";
 export type Source = "player" | "auto";
 export type Status = "In progress" | "Idle" | "Finished" | "Game over";
-export type Position = 1 | 2 | 3 | 4
 export type Coordinate = number[];
 export type Vector = [number, number];
 export type Action =
@@ -22,8 +27,8 @@ export type TetrisState = {
     referenceCellCoordinate: Coordinate;
     status: Status;
     firstRenderHappened: Boolean;
-    currentShape: shapeType;
-    nextShape: shapeType;
+    currentShape: shapeName;
+    nextShape: shapeName;
     currentShapeVectors: Vector[];
-    position: Position;
+    currentPositionIndex: number;
 }
