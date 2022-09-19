@@ -12,7 +12,18 @@ const randomColor = (): Color => {
 };
 
 const randomShape = (): shapeType => {
-    const arrayOfShapes: shapeType[] = [{ currentLetter: "o", currentPositionIndex: 1, currentShapeVectors: [] }, { currentLetter: "i", currentPositionIndex: 1, currentShapeVectors: [] }];
+    const arrayOfShapes: shapeType[] = [{
+        currentLetter: "o",
+        currentPositionIndex: 1,
+        currentShapeVectors: [],
+        previewReferenceCellCoordinate: [2, 2]
+    },
+    {
+        currentLetter: "i",
+        currentPositionIndex: 1,
+        currentShapeVectors: [],
+        previewReferenceCellCoordinate: [1, 2]
+    }];
     return arrayOfShapes[Math.floor(Math.random() * arrayOfShapes.length)]
 };
 
@@ -35,10 +46,10 @@ const initialState: TetrisState = {
     referenceCellCoordinate: [0, 5],
     status: 'In progress',
     firstRenderHappened: false,
-    currentShape: randomShape().currentLetter,
-    nextShape: randomShape().currentLetter,
-    currentShapeVectors: randomShape().currentShapeVectors,
-    currentPositionIndex: randomShape().currentPositionIndex
+    currentShape: randomShape(),
+    nextShape: randomShape(),
+    currentShapeVectors: [],
+    currentPositionIndex: randomShape().currentPositionIndex,
 };
 
 const tetrisGridWithActiveCellsDeactivated = (tetrisGrid: Grid): Grid => {
@@ -80,7 +91,7 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
 
     const { tetrisGrid, nextShapeColor, referenceCellCoordinate, currentShapeColor, currentShape, nextShape, currentShapeVectors, currentPositionIndex } = state;
     const { type } = action;
-    const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, shapesVectors(currentShape, currentPositionIndex))
+    const activeCellsCoordinates = cellCoordinates(referenceCellCoordinate, shapesVectors(currentShape.currentLetter, currentPositionIndex))
     const activeCell: CellType = { color: currentShapeColor, isActive: true, isEmpty: false }
     const { clearCurrentTimeout } = action.payload
 
@@ -88,7 +99,7 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
         case 'TRY_INTRODUCE_SHAPE':
 
             const activeCurrentCell: CellType = { color: nextShapeColor, isActive: true, isEmpty: false }
-            const coordinatesIntroducedShape = cellCoordinates(initialState.referenceCellCoordinate, shapesVectors(nextShape, 1))
+            const coordinatesIntroducedShape = cellCoordinates(initialState.referenceCellCoordinate, shapesVectors(nextShape.currentLetter, 1))
 
             if (shapeCanBeIntroduced(tetrisGrid, coordinatesIntroducedShape)) {
                 return {
@@ -100,8 +111,8 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
                     status: 'In progress',
                     firstRenderHappened: true,
                     currentShape: nextShape,
-                    nextShape: randomShape().currentLetter,
-                    currentShapeVectors: shapesVectors(nextShape, 1),
+                    nextShape: randomShape(),
+                    currentShapeVectors: shapesVectors(nextShape.currentLetter, 1),
                     currentPositionIndex: 1
                 }
             } else {
@@ -181,20 +192,20 @@ const reducer = (state: TetrisState, action: Action): TetrisState => {
             let newPosition;
             newPosition = currentPositionIndex + 1
 
-            const rotateShapeCoordinate = cellCoordinates(referenceCellCoordinate, shapesVectors(currentShape, newPosition))
+            const rotateShapeCoordinate = cellCoordinates(referenceCellCoordinate, shapesVectors(currentShape.currentLetter, newPosition))
 
             if (clearCurrentTimeout) {
                 clearCurrentTimeout()
             }
 
-            if (currentShape === 'i' && shapeCanBeRotated(tetrisGrid, rotateShapeCoordinate)) {
+            if (currentShape.currentLetter === 'i' && shapeCanBeRotated(tetrisGrid, rotateShapeCoordinate)) {
                 if (newPosition > 2) {
                     newPosition = 1
                 }
                 return {
                     ...state,
-                    tetrisGrid: tetrisGridWithShapeRotated(tetrisGrid, referenceCellCoordinate, activeCell, currentShapeVectors, shapesVectors(currentShape, newPosition)),
-                    currentShapeVectors: shapesVectors(currentShape, newPosition),
+                    tetrisGrid: tetrisGridWithShapeRotated(tetrisGrid, referenceCellCoordinate, activeCell, currentShapeVectors, shapesVectors(currentShape.currentLetter, newPosition)),
+                    currentShapeVectors: shapesVectors(currentShape.currentLetter, newPosition),
                     currentPositionIndex: newPosition,
                 }
             } else {
@@ -523,9 +534,9 @@ function App(): JSX.Element {
                             <section className="w-[100%] h-[100%] bg-greybg grid grid-cols-6 grid-rows-6 rounded-md overflow-hidden">
                                 {gameIsOver ?
                                     <div className="w-[10.5rem] h-[100%] bg-greybg grid grid-cols-6 rounded-md opacity-30">
-                                        <NextShapePreview nextShapeColor={'grey'} nextShape={nextShape} nextShapeVectors={shapesVectors(nextShape, 1)} />
+                                        <NextShapePreview nextShapeColor={'grey'} nextShape={nextShape} nextShapeVectors={shapesVectors(nextShape.currentLetter, 1)} />
                                     </div>
-                                    : <NextShapePreview nextShapeColor={nextShapeColor} nextShape={nextShape} nextShapeVectors={shapesVectors(nextShape, 1)} />
+                                    : <NextShapePreview nextShapeColor={nextShapeColor} nextShape={nextShape} nextShapeVectors={shapesVectors(nextShape.currentLetter, 1)} />
                                 }
                             </section>
                         </div>

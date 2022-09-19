@@ -1,21 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Color, Coordinate, Grid, Vector, CellType, shapeName } from '../types';
+import { Color, Coordinate, Grid, Vector, CellType, shapeType } from '../types';
 import { bgGradientColor } from '../utils/colors';
 
 const emptyNextShapeGrid = (): Grid => {
   const rowsOfCells = new Array(6).fill({ isEmpty: true, isActive: false });
   return new Array(6).fill(rowsOfCells);
-}
-
-const landmark = (shape: shapeName): Coordinate => {
-  switch (shape) {
-    case 'o':
-      return [2, 2]
-    case 'i':
-      return [1, 2]
-    default:
-      return [0, 0]
-  }
 }
 
 const nextShapeGridCopy = (nextShapeGrid: Grid): Grid => nextShapeGrid.map(row => [...row])
@@ -42,18 +31,19 @@ const nextShapeGridWithIntroducedShape = (nextShapeGrid: Grid, nextShapeCellsCoo
 
 type PropType = {
   nextShapeColor: Color;
-  nextShape: shapeName;
+  nextShape: shapeType;
   nextShapeVectors: Vector[]
 }
 
 export default function NextShape({ nextShapeColor, nextShape, nextShapeVectors }: PropType) {
 
   const [nextShapeGrid, updateNextShapeGrid] = useState(emptyNextShapeGrid());
+  const { previewReferenceCellCoordinate } = nextShape
 
   useEffect(() => {
     updateNextShapeGrid(arr => {
       const activeCell = { color: nextShapeColor, isActive: true, isEmpty: false }
-      const nextShapeCellsCoordinates = cellCoordinates(landmark(nextShape), nextShapeVectors)
+      const nextShapeCellsCoordinates = cellCoordinates(previewReferenceCellCoordinate, nextShapeVectors)
       return arr = nextShapeGridWithIntroducedShape(emptyNextShapeGrid(), nextShapeCellsCoordinates, activeCell);
     }
     );
