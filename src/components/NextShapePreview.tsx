@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Color, Coordinate, Grid, Vector, CellType, shapeType } from '../types';
+import { Color, Coordinate, Grid, Vector, CellType, ShapeType } from '../types';
 import { bgGradientColor } from '../utils/colors';
 
 const emptyNextShapeGrid = (): Grid => {
@@ -31,7 +31,7 @@ const nextShapeGridWithIntroducedShape = (nextShapeGrid: Grid, nextShapeCellsCoo
 
 type PropType = {
   nextShapeColor: Color;
-  nextShape: shapeType;
+  nextShape: ShapeType;
   nextShapeVectors: Vector[]
 }
 
