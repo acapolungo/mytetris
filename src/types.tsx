@@ -4,8 +4,8 @@ export type Color = "yellow" | "orange" | "purple" | "blue" | "red" | "grey";
 export type ShapeName = "i" | "o";
 export type ShapeType = {
     name: ShapeName;
-    currentPositionIndex: number;
-    currentShapeVectors: Vector[];
+    positionIndex: number;
+    positionVectors: Vector[][];
     previewReferenceCellCoordinate: Coordinate;
 }
 export type Direction = "down" | "left" | "right";
@@ -28,6 +28,4 @@ export type TetrisState = {
     firstRenderHappened: Boolean;
     currentShape: ShapeType;
     nextShape: ShapeType;
-    currentShapeVectors: Vector[];
-    currentPositionIndex: number;
 }
